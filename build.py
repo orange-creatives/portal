@@ -31,7 +31,7 @@ def render_card(article):
     platform = article.get('platform', '')
     badge = f'<span class="card-badge card-badge--{platform.lower()}">{platform}</span>' if platform else ''
     
-    cover_src = f"articles/{article['_dir']}/{article['cover']}" if not article.get('url') else article.get('cover_url', '')
+    cover_src = article['cover'] if article['cover'].startswith('assets/') else f"articles/{article['_dir']}/{article['cover']}" 
     
     return f'''    <a class="card" href="{href}"{target}>
       <img class="card-image" src="{cover_src}" alt="{article['title']}">

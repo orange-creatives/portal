@@ -6,7 +6,7 @@
     "claudecode",
     "ai"
   ],
-  "cover": "../../assets/covers/zenn-default.png",
+  "cover": "assets/covers/zenn-default.png",
   "platform": "Zenn",
   "source_url": "https://zenn.dev/orangewk/articles/ai-credit-sabotage-human",
   "section": "recent"

@@ -6,7 +6,7 @@
     "AI",
     "ContextEngineering"
   ],
-  "cover": "../../assets/covers/zenn-default.png",
+  "cover": "assets/covers/zenn-default.png",
   "platform": "Zenn",
   "source_url": "https://zenn.dev/orangewk/articles/yojo-pattern-shadow-mask-for-ai-coder",
   "section": "recent"
