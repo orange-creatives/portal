@@ -178,7 +178,7 @@ def main():
     parser = argparse.ArgumentParser(description="Import article to orange-creatives/portal")
     parser.add_argument("platform", choices=["zenn", "qiita"])
     parser.add_argument("slug_or_id", help="Zenn slug or Qiita item ID")
-    parser.add_argument("--section", default="recent", choices=["recent", "archive"])
+    parser.add_argument("--section", default="recent", choices=["featured", "recent", "archive"])
     parser.add_argument("--date", help="Override date (YYYY-MM-DD)")
     args = parser.parse_args()
     if args.platform == "zenn":

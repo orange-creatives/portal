@@ -4,5 +4,6 @@
   "date": "2026-02",
   "tags": ["AI"],
   "cover": "cover.png",
+  "section": "featured",
   "order": 3
 }
