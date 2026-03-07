@@ -109,6 +109,8 @@ PORTAL_CSS = """
     .card-title { font-size: 1rem; font-weight: 700; line-height: 1.5; }
     .card-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-top: auto; padding-top: 0.4rem; }
     footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+    .header-inner { display: flex; align-items: center; gap: 1rem; }
+    .header-logo { width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0; }
     @media (prefers-color-scheme: dark) {
       :root { --bg: #1a1a1a; --surface: #222; --text: #d4d4d8; --muted: #666; --border: #333; }
     }
@@ -173,8 +175,13 @@ def build():
 <body>
 
 <header>
-  <h1>orange creatives</h1>
-  <p>apps, music, words, and whatever catches my eye</p>
+  <div class="header-inner">
+    <img class="header-logo" src="assets/orange.png" alt="orange">
+    <div>
+      <h1>orange creatives</h1>
+      <p>apps, music, words, and whatever catches my eye</p>
+    </div>
+  </div>
 </header>
 
 <main>
