@@ -182,6 +182,7 @@ HEADER_HTML = """<header>
       <h1>orange creatives</h1>
       <p>apps, music, words, and whatever catches my eye</p>
     </div>
+    <p style="margin-left:auto; font-size:0.75rem; color:var(--muted); text-align:right; line-height:1.4;">this blog is mostly<br>written by coding agents</p>
   </div>
 </header>"""
 
