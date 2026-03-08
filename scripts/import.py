@@ -17,41 +17,7 @@ BLOG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZENN_DIR = os.path.join(os.path.dirname(BLOG_DIR), "zenn-content", "articles")
 ZENN_USERNAME = "orangewk"
 
-ARTICLE_CSS = """
-    .article-body { max-width: 720px; margin: 0 auto; }
-    .article-body h2 { color: var(--heading-color); font-size: 1.4rem; margin: 2.5rem 0 1rem;
-        padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); }
-    .article-body h3 { color: #37474f; font-size: 1.15rem; margin: 2rem 0 0.8rem;
-        padding-left: 0.5rem; border-left: 4px solid var(--accent); }
-    .article-body p { margin: 0.8rem 0; }
-    .article-body ul, .article-body ol { padding-left: 1.5rem; margin: 0.8rem 0; }
-    .article-body li { margin: 0.4rem 0; }
-    .article-body code { background: var(--code-bg); padding: 0.2em 0.4em;
-        border-radius: 3px; font-family: monospace; font-size: 0.9em; }
-    .article-body pre { background: var(--code-bg); padding: 1rem;
-        border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
-    .article-body pre code { padding: 0; background: none; }
-    .article-body blockquote { border-left: 4px solid #ddd; padding: 0.5rem 1rem;
-        color: #666; margin: 1rem 0; }
-    .article-body img { max-width: 100%; border-radius: 6px; }
-    .article-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    .article-body th, .article-body td { border: 1px solid #ddd; padding: 0.6rem; }
-    .article-body th { background: #f5f5f5; }
-    .article-meta { color: #888; font-size: 0.85rem; margin-bottom: 2rem;
-        display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-    .article-tag { color: var(--accent); font-weight: 600; }
-    .source-link { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #ddd;
-        font-size: 0.85rem; color: #888; }
-    .source-link a { color: var(--accent); }
-    .nav-links { display: flex; margin: 1.5rem 0; }
-    .nav-links a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-"""
-
-def get_base_css():
-    path = os.path.join(BLOG_DIR, "articles", "llm-mechanism", "index.html")
-    with open(path, encoding="utf-8") as f:
-        m = re.search(r"<style>(.*?)</style>", f.read(), re.DOTALL)
-    return m.group(1) if m else ""
+ARTICLE_CSS_LINK = '  <link rel="stylesheet" href="../../assets/article.css">'
 
 try:
     import markdown as md_lib
@@ -62,7 +28,6 @@ except ImportError:
         return "<pre>" + html_lib.escape(text) + "</pre>"
 
 def build_article_html(title, date, tags, body_html, source_url=None, source_name=None):
-    base_css = get_base_css()
     tags_html = "".join(f'<span class="article-tag">{t}</span>' for t in tags)
     source_html = ""
     if source_url:
@@ -76,7 +41,7 @@ def build_article_html(title, date, tags, body_html, source_url=None, source_nam
         '  <meta charset="UTF-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
         f"  <title>{html_lib.escape(title)}</title>",
-        f"  <style>{base_css}{ARTICLE_CSS}  </style>",
+        ARTICLE_CSS_LINK,
         "</head>",
         "<body>",
         "",
