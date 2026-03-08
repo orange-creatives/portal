@@ -228,7 +228,7 @@ def build():
   <title>orange creatives</title>
   <meta property="og:title" content="orange creatives">
   <meta property="og:description" content="apps, music, words, and whatever catches my eye">
-  <meta property="og:image" content="{SITE_URL}/assets/ogp.png">
+  <meta property="og:image" content="{SITE_URL}/assets/ogp.jpg">
   <meta property="og:url" content="{SITE_URL}/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
@@ -267,7 +267,7 @@ def build():
   <title>Archive - orange creatives</title>
   <meta property="og:title" content="orange creatives">
   <meta property="og:description" content="apps, music, words, and whatever catches my eye">
-  <meta property="og:image" content="{SITE_URL}/assets/ogp.png">
+  <meta property="og:image" content="{SITE_URL}/assets/ogp.jpg">
   <meta property="og:url" content="{SITE_URL}/archive.html">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
