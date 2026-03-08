@@ -309,6 +309,7 @@ footer {
 .article-body pre code { padding: 0; background: none; }
 .article-body blockquote { border-left: 4px solid var(--border-color); padding: 0.5rem 1rem;
     color: #666; margin: 1rem 0; }
+.article-body a { color: var(--accent); }
 .article-body img { max-width: 100%; border-radius: 6px; }
 .article-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
 .article-body th, .article-body td { border: 1px solid var(--border-color); padding: 0.6rem; }
@@ -394,5 +395,6 @@ footer {
 
   footer { border-top-color: var(--border-color); color: var(--text-muted); }
 
+  .article-meta { color: var(--text-muted); }
   .source-link { border-top-color: var(--border-color); color: var(--text-muted); }
 }
