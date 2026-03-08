@@ -16,6 +16,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 BLOG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZENN_DIR = os.path.join(os.path.dirname(BLOG_DIR), "zenn-content", "articles")
 ZENN_USERNAME = "orangewk"
+SITE_URL = "https://orange-creatives.github.io/portal"
 
 ARTICLE_CSS_LINK = '  <link rel="stylesheet" href="../../assets/article.css">'
 
@@ -27,13 +28,19 @@ except ImportError:
     def md2html(text):
         return "<pre>" + html_lib.escape(text) + "</pre>"
 
-def build_article_html(title, date, tags, body_html, source_url=None, source_name=None):
+def build_article_html(title, date, tags, body_html, slug, description, source_url=None, source_name=None, cover=None):
     tags_html = "".join(f'<span class="article-tag">{t}</span>' for t in tags)
     source_html = ""
     if source_url:
         source_html = (f'<div class="source-link">初出: '
                        f'<a href="{source_url}" target="_blank" rel="noopener">'
                        f'{source_name or source_url}</a></div>')
+    if cover and cover.startswith("assets/"):
+        og_image = f"{SITE_URL}/{cover}"
+    elif cover:
+        og_image = f"{SITE_URL}/articles/{slug}/{cover}"
+    else:
+        og_image = f"{SITE_URL}/assets/orange.png"
     return "\n".join([
         "<!DOCTYPE html>",
         '<html lang="ja">',
@@ -41,6 +48,12 @@ def build_article_html(title, date, tags, body_html, source_url=None, source_nam
         '  <meta charset="UTF-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
         f"  <title>{html_lib.escape(title)}</title>",
+        f'  <meta property="og:title" content="{html_lib.escape(title)}">',
+        f'  <meta property="og:description" content="{html_lib.escape(description)}">',
+        f'  <meta property="og:image" content="{og_image}">',
+        f'  <meta property="og:url" content="{SITE_URL}/articles/{slug}/">',
+        f'  <meta property="og:type" content="article">',
+        f'  <meta name="twitter:card" content="summary_large_image">',
         ARTICLE_CSS_LINK,
         "</head>",
         "<body>",
@@ -93,10 +106,10 @@ def fetch_qiita(item_id):
 def save_article(slug, title, date, tags, body_html, section, source_url, source_name, cover):
     out_dir = os.path.join(BLOG_DIR, "articles", slug)
     os.makedirs(out_dir, exist_ok=True)
-    html = build_article_html(title, date, tags, body_html, source_url, source_name)
+    desc = re.sub(r"<[^>]+>", "", body_html).strip().replace("\n", " ")[:80] + "..."
+    html = build_article_html(title, date, tags, body_html, slug, desc, source_url, source_name, cover)
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
-    desc = re.sub(r"<[^>]+>", "", body_html).strip().replace("\n", " ")[:80] + "..."
     meta = {
         "title": title, "description": desc, "date": date,
         "tags": tags[:2], "cover": cover, "platform": source_name,

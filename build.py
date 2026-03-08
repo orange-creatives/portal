@@ -11,6 +11,7 @@ import json, glob, os, sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 BLOG_DIR = os.path.dirname(os.path.abspath(__file__))
+SITE_URL = "https://orange-creatives.github.io/portal"
 
 def load_articles():
     articles = []
@@ -224,6 +225,12 @@ def build():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>orange creatives</title>
+  <meta property="og:title" content="orange creatives">
+  <meta property="og:description" content="apps, music, words, and whatever catches my eye">
+  <meta property="og:image" content="{SITE_URL}/assets/orange.png">
+  <meta property="og:url" content="{SITE_URL}/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <style>{PORTAL_CSS}  </style>
 </head>
 <body>
@@ -257,6 +264,12 @@ def build():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Archive - orange creatives</title>
+  <meta property="og:title" content="orange creatives">
+  <meta property="og:description" content="apps, music, words, and whatever catches my eye">
+  <meta property="og:image" content="{SITE_URL}/assets/orange.png">
+  <meta property="og:url" content="{SITE_URL}/archive.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <style>{PORTAL_CSS}  </style>
 </head>
 <body>
