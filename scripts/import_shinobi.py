@@ -56,12 +56,6 @@ ARTICLE_CSS = """
 """
 
 
-def get_base_css():
-    path = os.path.join(BLOG_DIR, "articles", "llm-mechanism", "index.html")
-    with open(path, encoding="utf-8") as f:
-        m = re.search(r"<style>(.*?)</style>", f.read(), re.DOTALL)
-    return m.group(1) if m else ""
-
 
 def fetch(url, sleep_sec=1.0):
     """URL を取得して UTF-8 文字列を返す。"""
@@ -113,8 +107,9 @@ def clean_body_html(raw_html):
     return html.strip()
 
 
-def build_article_html(title, date, tags, body_html, source_url):
-    base_css = get_base_css()
+SITE_URL = "https://orange-wks.github.io/portal"
+
+def build_article_html(title, date, tags, body_html, source_url, slug):
     tags_html = "".join(f'<span class="article-tag">{t}</span>' for t in tags)
     import html as html_lib
     source_html = (
@@ -122,6 +117,11 @@ def build_article_html(title, date, tags, body_html, source_url):
         f'<a href="{source_url}" target="_blank" rel="noopener">'
         f"Shinobiブログ (orangeness)</a></div>"
     )
+    cover = "assets/covers/shinobi-default.png"
+    og_image = f"{SITE_URL}/{cover}"
+    cover_src = f"../../{cover}"
+    desc_text = strip_tags(body_html).strip().replace("\n", " ")
+    desc_text = re.sub(r"\s+", " ", desc_text)[:80] + "..."
     return "\n".join(
         [
             "<!DOCTYPE html>",
@@ -130,7 +130,14 @@ def build_article_html(title, date, tags, body_html, source_url):
             '  <meta charset="UTF-8">',
             '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
             f"  <title>{html_lib.escape(title)}</title>",
-            f"  <style>{base_css}{ARTICLE_CSS}  </style>",
+            f'  <meta property="og:title" content="{html_lib.escape(title)}">',
+            f'  <meta property="og:description" content="{html_lib.escape(desc_text)}">',
+            f'  <meta property="og:image" content="{og_image}">',
+            f'  <meta property="og:url" content="{SITE_URL}/articles/{slug}/">',
+            f'  <meta property="og:type" content="article">',
+            f'  <meta name="twitter:image" content="{og_image}">',
+            f'  <meta name="twitter:card" content="summary_large_image">',
+            '  <link rel="stylesheet" href="../../assets/article.css">',
             "</head>",
             "<body>",
             "",
@@ -142,6 +149,7 @@ def build_article_html(title, date, tags, body_html, source_url):
             '  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>',
             '  <div class="article-body">',
             f'    <div class="article-meta">{tags_html}<span>{date}</span></div>',
+            f'    <img class="article-cover" src="{cover_src}" alt="{html_lib.escape(title)}">',
             f"    {body_html}",
             f"    {source_html}",
             "  </div>",
@@ -174,7 +182,7 @@ def save_article(slug, title, date, tags, body_html, source_url):
         "section": "archive",
     }
 
-    html_content = build_article_html(title, date, tags, body_html, source_url)
+    html_content = build_article_html(title, date, tags, body_html, source_url, slug)
 
     for base in [BLOG_DIR, TEMP_DIR]:
         out_dir = os.path.join(base, "articles", slug)

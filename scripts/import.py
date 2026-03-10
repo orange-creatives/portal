@@ -37,10 +37,14 @@ def build_article_html(title, date, tags, body_html, slug, description, source_u
                        f'{source_name or source_url}</a></div>')
     if cover and cover.startswith("assets/"):
         og_image = f"{SITE_URL}/{cover}"
+        cover_src = f"../../{cover}"
     elif cover:
         og_image = f"{SITE_URL}/articles/{slug}/{cover}"
+        cover_src = cover
     else:
         og_image = f"{SITE_URL}/assets/orange.png"
+        cover_src = None
+    cover_tag = f'    <img class="article-cover" src="{cover_src}" alt="{html_lib.escape(title)}">' if cover_src else ""
     return "\n".join([
         "<!DOCTYPE html>",
         '<html lang="ja">',
@@ -53,7 +57,8 @@ def build_article_html(title, date, tags, body_html, slug, description, source_u
         f'  <meta property="og:image" content="{og_image}">',
         f'  <meta property="og:url" content="{SITE_URL}/articles/{slug}/">',
         f'  <meta property="og:type" content="article">',
-        f'  <meta name="twitter:card" content="summary">',
+        f'  <meta name="twitter:image" content="{og_image}">',
+        f'  <meta name="twitter:card" content="summary_large_image">',
         ARTICLE_CSS_LINK,
         "</head>",
         "<body>",
@@ -66,6 +71,7 @@ def build_article_html(title, date, tags, body_html, slug, description, source_u
         '  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>',
         '  <div class="article-body">',
         f'    <div class="article-meta">{tags_html}<span>{date}</span></div>',
+        cover_tag,
         f"    {body_html}",
         f"    {source_html}",
         "  </div>",
