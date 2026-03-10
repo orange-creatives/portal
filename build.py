@@ -1,5 +1,5 @@
 """
-orange-creatives/portal build script v3
+orange-wks/portal build script v3
 - meta.json の section フィールドで3セクションに振り分け
 - section: "featured" / "recent" (default) / "archive"
 - featured: トップに大カードグリッド
@@ -11,7 +11,7 @@ import json, glob, os, sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 BLOG_DIR = os.path.dirname(os.path.abspath(__file__))
-SITE_URL = "https://orange-creatives.github.io/portal"
+SITE_URL = "https://orange-wks.github.io/portal"
 
 def load_articles():
     articles = []
@@ -179,7 +179,7 @@ HEADER_HTML = """<header>
   <div class="header-inner">
     <img class="header-logo" src="assets/orange.png" alt="orange">
     <div>
-      <h1>orange creatives</h1>
+      <h1>orange-wks</h1>
       <p>apps, music, words, and whatever catches my eye</p>
     </div>
     <p style="margin-left:auto; font-size:0.75rem; color:var(--muted); text-align:right; line-height:1.4;">this blog is mostly<br>written by coding agents</p>
@@ -225,8 +225,8 @@ def build():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>orange creatives</title>
-  <meta property="og:title" content="orange creatives">
+  <title>orange-wks</title>
+  <meta property="og:title" content="orange-wks">
   <meta property="og:description" content="apps, music, words, and whatever catches my eye">
   <meta property="og:image" content="{SITE_URL}/assets/ogp.jpg">
   <meta property="og:url" content="{SITE_URL}/">
@@ -264,8 +264,8 @@ def build():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archive - orange creatives</title>
-  <meta property="og:title" content="orange creatives">
+  <title>Archive - orange-wks</title>
+  <meta property="og:title" content="orange-wks">
   <meta property="og:description" content="apps, music, words, and whatever catches my eye">
   <meta property="og:image" content="{SITE_URL}/assets/ogp.jpg">
   <meta property="og:url" content="{SITE_URL}/archive.html">

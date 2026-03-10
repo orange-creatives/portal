@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-orange-creatives/portal - 記事インポートスクリプト
+orange-wks/portal - 記事インポートスクリプト
 
 使い方:
   python scripts/import.py zenn <slug>        # zenn-content/ のローカルまたはZenn APIから
@@ -16,7 +16,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 BLOG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ZENN_DIR = os.path.join(os.path.dirname(BLOG_DIR), "zenn-content", "articles")
 ZENN_USERNAME = "orangewk"
-SITE_URL = "https://orange-creatives.github.io/portal"
+SITE_URL = "https://orange-wks.github.io/portal"
 
 ARTICLE_CSS_LINK = '  <link rel="stylesheet" href="../../assets/article.css">'
 
@@ -63,7 +63,7 @@ def build_article_html(title, date, tags, body_html, slug, description, source_u
         "</header>",
         "",
         "<main>",
-        '  <div class="nav-links"><a href="../../">&larr; orange creatives</a></div>',
+        '  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>',
         '  <div class="article-body">',
         f'    <div class="article-meta">{tags_html}<span>{date}</span></div>',
         f"    {body_html}",
@@ -153,7 +153,7 @@ def cmd_qiita(item_id, section, date_override):
                  data["url"], "Qiita", "assets/covers/qiita-default.png")
 
 def main():
-    parser = argparse.ArgumentParser(description="Import article to orange-creatives/portal")
+    parser = argparse.ArgumentParser(description="Import article to orange-wks/portal")
     parser.add_argument("platform", choices=["zenn", "qiita"])
     parser.add_argument("slug_or_id", help="Zenn slug or Qiita item ID")
     parser.add_argument("--section", default="recent", choices=["featured", "recent", "archive"])

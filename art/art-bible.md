@@ -1,4 +1,4 @@
-# Art Bible — orange creatives
+# Art Bible — orange-wks
 
 ## デザインエートス
 

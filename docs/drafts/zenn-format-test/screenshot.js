@@ -10,7 +10,7 @@ const path = require('path');
 
   await page.setViewportSize({ width: 700, height: 900 });
 
-  const htmlPath = 'E:/orange-creatives/portal/docs/drafts/zenn-format-test/pattern-d-source.html';
+  const htmlPath = 'E:/orange-wks/portal/docs/drafts/zenn-format-test/pattern-d-source.html';
   await page.goto('file:///' + htmlPath.replace(/\\/g, '/'));
 
   // Wait for fonts to load
@@ -23,7 +23,7 @@ const path = require('path');
 
   await page.setViewportSize({ width: 700, height: bodyHeight });
 
-  const outputPath = 'E:/orange-creatives/portal/docs/drafts/zenn-format-test/pattern-d.png';
+  const outputPath = 'E:/orange-wks/portal/docs/drafts/zenn-format-test/pattern-d.png';
   await page.screenshot({
     path: outputPath,
     fullPage: true,

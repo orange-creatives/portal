@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 import_shinobi.py - 忍者ブログ (orangeness.blog.shinobi.jp) の全記事をクロールして
-orange-creatives/portal の articles/ に保存するスクリプト。
+orange-wks/portal の articles/ に保存するスクリプト。
 
 保存先:
-  E:/orange-creatives/portal/articles/shinobi-NNN/
+  E:/orange-wks/portal/articles/shinobi-NNN/
   C:/Users/orang/AppData/Local/Temp/blog-init/articles/shinobi-NNN/
 
 使い方:
@@ -139,7 +139,7 @@ def build_article_html(title, date, tags, body_html, source_url):
             "</header>",
             "",
             "<main>",
-            '  <div class="nav-links"><a href="../../">&larr; orange creatives</a></div>',
+            '  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>',
             '  <div class="article-body">',
             f'    <div class="article-meta">{tags_html}<span>{date}</span></div>',
             f"    {body_html}",

@@ -1,7 +1,7 @@
-# orange creatives portal
+# orange-wks portal
 
 orangeの活動・記事・作品をまとめるポータルサイト。
-https://orange-creatives.github.io/portal/
+https://orange-wks.github.io/portal/
 
 ## ワークフロー
 
