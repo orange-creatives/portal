@@ -59,7 +59,7 @@ def build_article_html(title, date, tags, body_html, slug, description, source_u
         f'  <meta property="og:url" content="{article_url}">',
         f'  <meta property="og:type" content="article">',
         f'  <meta name="twitter:image" content="{og_image}">',
-        f'  <meta name="twitter:card" content="summary_large_image">',
+        f'  <meta name="twitter:card" content="summary">',
         ARTICLE_CSS_LINK,
         "</head>",
         "<body>",
@@ -115,7 +115,7 @@ def fetch_qiita(item_id):
 def save_article(slug, title, date, tags, body_html, section, source_url, source_name, cover):
     out_dir = os.path.join(BLOG_DIR, "articles", slug)
     os.makedirs(out_dir, exist_ok=True)
-    desc = re.sub(r"<[^>]+>", "", body_html).strip().replace("\n", " ")[:80] + "..."
+    desc = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", body_html)).strip()[:150] + "..."
     html = build_article_html(title, date, tags, body_html, slug, desc, source_url, source_name, cover)
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)

@@ -120,7 +120,7 @@ def build_article_html(title, date, tags, body_html, source_url, slug):
     og_image = f"{SITE_URL}/{cover}"
     cover_src = f"../../{cover}"
     desc_text = strip_tags(body_html).strip().replace("\n", " ")
-    desc_text = re.sub(r"\s+", " ", desc_text)[:80] + "..."
+    desc_text = re.sub(r"\s+", " ", desc_text)[:150] + "..."
     article_url = f"{SITE_URL}/articles/{slug}/"
     return "\n".join(
         [
@@ -136,7 +136,7 @@ def build_article_html(title, date, tags, body_html, source_url, slug):
             f'  <meta property="og:url" content="{article_url}">',
             f'  <meta property="og:type" content="article">',
             f'  <meta name="twitter:image" content="{og_image}">',
-            f'  <meta name="twitter:card" content="summary_large_image">',
+            f'  <meta name="twitter:card" content="summary">',
             '  <link rel="stylesheet" href="../../assets/article.css">',
             "</head>",
             "<body>",
@@ -171,7 +171,7 @@ def save_article(slug, title, date, tags, body_html, source_url):
     """
     cover = "assets/ogp.jpg"
     desc_text = strip_tags(body_html).strip().replace("\n", " ")
-    desc_text = re.sub(r"\s+", " ", desc_text)[:80] + "..."
+    desc_text = re.sub(r"\s+", " ", desc_text)[:150] + "..."
 
     meta = {
         "title": title,

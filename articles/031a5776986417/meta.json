@@ -1,6 +1,6 @@
 {
   "title": "「どこが分からないか分からない」娘のために、数学AIチューターを作ってみた",
-  "description": "! この記事は、第4回 Agentic AI Hackathon with Google Cloud 審査向け記事です。 アプリは開発中です。現時点では「中学レ...",
+  "description": "第4回 Agentic AI Hackathon with Google Cloud 審査向け記事。「どこが分からないか分からない」状態の中学生向けに、AIが対話で理解度を探りながら教える数学チューターを開発中。",
   "date": "2026-02-15",
   "tags": [
     "React",
