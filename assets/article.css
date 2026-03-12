@@ -324,6 +324,48 @@ footer {
 .nav-links { display: flex; margin: 1.5rem 0; }
 .nav-links a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
 
+/* --- share buttons --- */
+
+.share-buttons {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.share-btn:hover { border-color: var(--accent); background: var(--accent); color: #fff; }
+.share-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.share-btn--copied { border-color: var(--accent); }
+
+/* --- bottom nav --- */
+
+.bottom-nav {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.bottom-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.bottom-nav a:hover { text-decoration: underline; }
+
 /* --- utilities --- */
 
 .mermaid { margin: 1.5rem 0; text-align: center; }
@@ -398,4 +440,9 @@ footer {
 
   .article-meta { color: var(--text-muted); }
   .source-link { border-top-color: var(--border-color); color: var(--text-muted); }
+
+  .share-buttons { border-top-color: var(--border-color); }
+  .share-btn { background: var(--ai-bg); border-color: var(--border-color); color: var(--text-color); }
+  .share-btn:hover { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .bottom-nav { border-top-color: var(--border-color); }
 }
