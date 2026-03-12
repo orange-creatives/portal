@@ -73,7 +73,7 @@ portal/
   "description": "カードに表示する一行説明",
   "date": "2026-03-05",
   "tags": ["AI", "ClaudeCode"],
-  "cover": "assets/covers/zenn-default.png",
+  "cover": "assets/ogp.jpg",
   "platform": "Zenn",
   "source_url": "https://zenn.dev/orangewk/articles/slug",
   "section": "recent"

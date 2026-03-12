@@ -147,7 +147,7 @@ def cmd_zenn(slug, section, date_override):
     date = date_override or data_api["published_at"][:10]
     save_article(slug, title, date, topics, body_html, section,
                  f"https://zenn.dev/{ZENN_USERNAME}/articles/{slug}",
-                 "Zenn", "assets/covers/zenn-default.png")
+                 "Zenn", "assets/ogp.jpg")
 
 def cmd_qiita(item_id, section, date_override):
     data = fetch_qiita(item_id)
@@ -156,7 +156,7 @@ def cmd_qiita(item_id, section, date_override):
     body_html = md2html(data["body"])
     date = date_override or data["created_at"][:10]
     save_article(f"qiita-{item_id}", title, date, tags, body_html, section,
-                 data["url"], "Qiita", "assets/covers/qiita-default.png")
+                 data["url"], "Qiita", "assets/ogp.jpg")
 
 def main():
     parser = argparse.ArgumentParser(description="Import article to orange-wks/portal")

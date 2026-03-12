@@ -6,7 +6,7 @@
     "AI",
     "VS Code"
   ],
-  "cover": "assets/covers/zenn-default.png",
+  "cover": "assets/ogp.jpg",
   "platform": "Zenn",
   "source_url": "https://zenn.dev/orangewk/articles/claude-code-unauthorized-extension-install",
   "section": "recent"

@@ -16,7 +16,6 @@ import os
 import re
 import json
 import time
-import shutil
 import urllib.request
 import urllib.parse
 import io
@@ -117,7 +116,7 @@ def build_article_html(title, date, tags, body_html, source_url, slug):
         f'<a href="{source_url}" target="_blank" rel="noopener">'
         f"Shinobiブログ (orangeness)</a></div>"
     )
-    cover = "assets/covers/shinobi-default.png"
+    cover = "assets/ogp.jpg"
     og_image = f"{SITE_URL}/{cover}"
     cover_src = f"../../{cover}"
     desc_text = strip_tags(body_html).strip().replace("\n", " ")
@@ -167,7 +166,7 @@ def save_article(slug, title, date, tags, body_html, source_url):
     """
     BLOG_DIR/articles/<slug>/ と TEMP_DIR/articles/<slug>/ の両方に保存する。
     """
-    cover = "assets/covers/shinobi-default.png"
+    cover = "assets/ogp.jpg"
     desc_text = strip_tags(body_html).strip().replace("\n", " ")
     desc_text = re.sub(r"\s+", " ", desc_text)[:80] + "..."
 
@@ -299,24 +298,6 @@ def main():
     print(f"保存先1: {BLOG_DIR}/articles/")
     print(f"保存先2: {TEMP_DIR}/articles/")
     print()
-
-    # カバー画像の準備
-    cover_src = os.path.join(BLOG_DIR, "assets", "covers", "qiita-default.png")
-    cover_dst = os.path.join(BLOG_DIR, "assets", "covers", "shinobi-default.png")
-    cover_dst_temp = os.path.join(TEMP_DIR, "assets", "covers", "shinobi-default.png")
-
-    if not os.path.exists(cover_dst):
-        if os.path.exists(cover_src):
-            shutil.copy2(cover_src, cover_dst)
-            print(f"カバー画像コピー: {cover_dst}")
-        else:
-            print(f"警告: カバー画像ソースが見つかりません: {cover_src}")
-
-    if not os.path.exists(cover_dst_temp):
-        os.makedirs(os.path.dirname(cover_dst_temp), exist_ok=True)
-        if os.path.exists(cover_src):
-            shutil.copy2(cover_src, cover_dst_temp)
-            print(f"カバー画像コピー (temp): {cover_dst_temp}")
 
     # 全記事URLを収集（Page/1/ から Page/25/ まで）
     all_article_urls = []
