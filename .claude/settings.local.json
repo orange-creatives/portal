@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(find articles:*)",
+      "Bash(python build.py)",
+      "Bash(git push:*)",
+      "Read(//tmp/**)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:docs.x.com)",
+      "WebFetch(domain:note.com)",
+      "WebFetch(domain:developer.twitter.com)",
+      "Bash(gh release:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:claude.ai)",
+      "Bash(tree:*)"
+    ]
+  }
+}

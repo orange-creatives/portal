@@ -1,0 +1,8 @@
+{
+  "title": "GlassWorm を調べたら自分のリポが丸裸だった — 半日で防御を組んだ記録",
+  "description": "VS Code拡張900万件汚染、GitHub履歴改竄。個人リポ17個を監査して対策を組んだ記録。",
+  "date": "2026-03-22",
+  "tags": ["Security", "ClaudeCode", "GitHub"],
+  "cover": "cover.png",
+  "section": "recent"
+}

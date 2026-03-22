@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlassWorm を調べたら自分のリポが丸裸だった</title>
+  <meta property="og:title" content="GlassWorm を調べたら自分のリポが丸裸だった — 半日で防御を組んだ記録">
+  <meta property="og:description" content="VS Code拡張900万件汚染、GitHub履歴改竄。個人リポ17個を監査して対策を組んだ記録。">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/security-zero-burden-2026-03/cover.png">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/security-zero-burden-2026-03/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/security-zero-burden-2026-03/cover.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+</head>
+<body>
+
+<header>
+  <h1>GlassWorm を調べたら自分のリポが丸裸だった</h1>
+  <p>半日で防御を組んだ記録</p>
+</header>
+
+<div class="article-meta">
+  <time>2026-03-22</time>
+  <span class="tags"><span class="tag">Security</span><span class="tag">ClaudeCode</span><span class="tag">GitHub</span></span>
+</div>
+
+<img class="article-cover" src="cover.png" alt="セキュリティ対策カバー画像">
+
+<article>
+
+<p>個人開発で MathDesk という教育アプリを作っている。Claude Code で開発し、GitHub の private リポで管理している。</p>
+
+<p>セキュリティは「まあ private だし」で放置していた。GlassWorm を調べたら、その前提が崩れた。</p>
+
+<h2>きっかけ</h2>
+
+<p>2026年3月、GlassWorm というサプライチェーン攻撃が話題になっていた。Claude Code に「glass worm等のホットなセキュリティリスクたちと現在有用なセキュリティ構築について調査して」と投げた。</p>
+
+<p>返ってきた内容が重かった。VS Code 拡張を偽装して開発者の環境に入り込み、不可視の Unicode 文字にペイロードを隠し、Solana ブロックチェーンを C2 に使うのでテイクダウンできない。被害者のトークンを盗んで別のパッケージや拡張を自動で汚染する自己増殖型。900万インストール以上が影響を受けたとされている。</p>
+
+<p>同時期に ForceMemo という攻撃も進行中で、盗んだ GitHub トークンで Python リポに force-push して履歴を書き換える。元のコミットメッセージと著者を保持するので GitHub の UI では気づけない。</p>
+
+<p>Claude Code 自体にも Critical の RCE 脆弱性（CVE-2026-31862）が見つかっている。設定ファイル経由で任意コマンドを実行できる。AI エージェントのスキル定義3行で SSH 鍵を窃取できるという報告もある（Snyk ToxicSkills 調査）。</p>
+
+<h2>「何かオールインクルーシヴないの？」</h2>
+
+<p>調査結果を読んで、私が聞いたのがこれだった。「何かオールインクルーシヴで個人で対応できる範囲のものないの？ クローボット周辺とかになんかありそうだけど（それ自体も汚染されてるパラドックスもありそうだが」</p>
+
+<p>Claude Code が返した答えは「単一のオールインワン製品は存在しない」。GlassWorm 自体が VS Code 拡張（開発者ツール）を偽装して入り込んだ事実は、「守るためのツール自体が攻撃ベクターになる」が理論ではなく現実であることを証明していた。</p>
+
+<p>Socket Firewall Free というパッケージプロキシを提案された時に「これPip uv やwingetなどはどうなるん？ なんか的外れなこと言ってる？」と聞いた。的外れではなかった。pip と uv は対応していたが、winget や VS Code 拡張は守備範囲外だった。npm/PyPI（言語レジストリ）、winget（OS レジストリ）、VS Code Marketplace（IDE エコシステム）は信頼チェーンが別物なので、一つのプロキシで全部は守れない。</p>
+
+<h2>自分のリポを監査してみた</h2>
+
+<p>ここまで調べて「じゃあ自分は大丈夫なのか」と思い、Claude Code に全リポの監査を投げた。17個の GitHub リポを調べた結果:</p>
+
+<ul>
+<li><strong>public リポ（portal）の Secret Scanning と Push Protection が全無効だった。</strong> Public なのに</li>
+<li><strong>17リポ中16リポに Dependabot が未設定。</strong> 依存関係の脆弱性チェックが動いていない</li>
+<li><strong>VS Code 拡張は17個、全て大手パブリッシャーか自作。</strong> ここは無事だった</li>
+<li><strong>Claude Code の設定に <code>ANTHROPIC_BASE_URL</code> の改竄はなし。</strong>（CVE-2026-21852 で攻撃ベクターになる）</li>
+</ul>
+
+<p>そしてローカルで gitleaks を走らせたら、<strong>git 履歴から5件のシークレットが見つかった。</strong></p>
+
+<h2>「それ、けっこうやばいな・・・」</h2>
+
+<p>5件のうち1件は Firebase の API キーで、過去にポストモーテムまで書いたリーク事故のキーがまだ有効なまま git 履歴に残っていた。</p>
+
+<p>GCP Console で確認したら、そのキーはアクティブのまま放置されていた。Firebase 自体も「停止はしてないはず、放置」という状態。使っていないのに有効なキーが漏洩済みの git 履歴にある。</p>
+
+<p>キーをローテーションし、<code>.gitleaks.toml</code> で過去コミットを allowlist に追加した。git 履歴からシークレットを消す方法（<code>git filter-repo</code>）もあるが、全コミットハッシュが変わるのでリスクが高い。キーを無効化済みなら allowlist で十分、というのが業界のコンセンサスらしい。</p>
+
+<h2>コーダー負担をゼロにする設計</h2>
+
+<p>対策を組み始めた時に私が気にしたのは「これの導入によってコーダーのコンテキスト負担はどの程度か（できればコーダーはなにも負担なくてその外部が保護するのがよいが」ということ。</p>
+
+<p>Claude Code が各対策のコーダー負担を正直に分類した:</p>
+
+<ul>
+<li>GitHub の設定（Secret Scanning、Push Protection、Dependabot、Branch Protection、CI）→ <strong>全部バックグラウンドで動く。ゼロ</strong></li>
+<li>Socket Firewall Free → <strong><code>npm install</code> のたびに <code>sfw</code> を付ける必要がある。</strong> ただし shell alias で透過的にすれば負担ゼロ</li>
+<li>Gitsign（コミット署名）→ <strong>コミットごとにブラウザで OIDC 認証。最も重い</strong></li>
+<li>gitleaks pre-commit hook → <strong>普段は透明だが誤検知でコミットが中断する</strong></li>
+</ul>
+
+<p>この分析を見て方針を決めた。<strong>コーダーの日常ワークフローを変えない。</strong> Gitsign は見送り、代わりに Branch Protection で force-push を構造的に禁止する。gitleaks pre-commit も見送り、Push Protection + CI の gitleaks で同じ範囲をカバーする。</p>
+
+<h2>GitHub Free の private リポは丸裸</h2>
+
+<p>Branch Protection を設定しようとして、Claude Code が「MathDesk（private）に Branch Protection を設定できない — GitHub Free プランでは private リポの branch protection は利用不可」と報告してきた。</p>
+
+<p>これが今回一番驚いたこと。GitHub Free の private リポは force-push し放題で、CI が失敗しても main に直接 push できる。ForceMemo 攻撃がトークンを盗んだら、やりたい放題ということ。</p>
+
+<p>「じゃあまあ有料プランにするわさすがに4ドルくらいはらう もっとたかいかとおもってた」。GitHub Pro にアップグレードして、5リポに Branch Protection を設定した。force-push 禁止、PR 必須、CI 必須、管理者も迂回不可。</p>
+
+<h2>CI が通るまでの試行錯誤</h2>
+
+<p>gitleaks + OSV-Scanner + Semgrep の3ジョブを GitHub Actions に入れた。全部 fail した。</p>
+
+<ul>
+<li><code>gitleaks-action@v2</code> は有料ライセンスが必要だった → CLI 直接実行に変更</li>
+<li><code>google/osv-scanner-action@v2</code> のパスが間違っていた → <code>go install</code> + CLI に変更</li>
+<li>Semgrep の <code>--error</code> フラグが既存コードの40件の findings を全てブロックしていた → 除去</li>
+</ul>
+
+<p>4回目の push でようやく全 pass。gitleaks が git 履歴のシークレット5件を検出して fail していたのが最後の壁で、これは先述のキーローテーション + allowlist で解消した。</p>
+
+<h2>Dependabot が早速仕事をした</h2>
+
+<p>Dependabot を有効化した途端、31件の脆弱性（1 critical, 16 high, 11 moderate, 3 low）が報告された。放置していたツケ。</p>
+
+<p>Dependabot の自動 PR 10件と <code>npm audit fix</code> で critical / high は全て解消した。残り16件は全て間接依存の上流修正待ちで手出しできない。<code>@modelcontextprotocol/sdk</code> が hono に依存していて、<code>firebase-admin</code> が undici に依存している。これらはツールでは解決できない。</p>
+
+<h2>chezmoi リポも守った</h2>
+
+<p><code>.bashrc</code> に sfw の alias を追加した後、ふと chezmoi（dotfiles 管理）のリポを確認したら Branch Protection なし、force-push し放題だった。chezmoi リポには CLAUDE.md（AI の行動ルール）、メモリファイル、スキル定義が入っている。改竄されると開発環境そのものが汚染される。</p>
+
+<p>force-push 禁止だけ設定した。PR 必須にすると chezmoi の直接 push ワークフローが壊れるので、そこはトレードオフ。</p>
+
+<h2>やったことの全体像</h2>
+
+<table>
+<thead><tr><th>対策</th><th>コスト</th><th>コーダー負担</th></tr></thead>
+<tbody>
+<tr><td>Secret Scanning + Push Protection</td><td>無料 (public)</td><td>ゼロ</td></tr>
+<tr><td>Branch Protection（5リポ）</td><td>$4/月 (Pro)</td><td>ゼロ</td></tr>
+<tr><td>CI（gitleaks / OSV-Scanner / Semgrep）</td><td>無料</td><td>ゼロ</td></tr>
+<tr><td>Dependabot alerts + version updates</td><td>無料</td><td>ゼロ（PR が来る）</td></tr>
+<tr><td>VS Code extensions.allowed</td><td>無料</td><td>初回のみ</td></tr>
+<tr><td>sfw alias（npm/pip/uv）</td><td>無料</td><td>ゼロ（alias 後）</td></tr>
+<tr><td>GCP API キーのローテーション</td><td>—</td><td>—</td></tr>
+<tr><td>許可リスト棚卸し（210→160件）</td><td>—</td><td>—</td></tr>
+</tbody>
+</table>
+
+<h2>守れないもの</h2>
+
+<ul>
+<li><strong>Private リポの Secret scanning</strong> — Pro でも別途 $19/月が必要</li>
+<li><strong>許可済みパブリッシャーの拡張汚染</strong> — GlassWorm のアカウント乗っ取り型には extensions.allowed が効かない。VS Code にサンドボックスが実装されるまで構造的に無理。Zed は WASM サンドボックスで先行しているが、エコシステムの移行コストが高い</li>
+<li><strong>間接依存の脆弱性</strong> — npm audit fix で消えない。上流の修正待ち</li>
+<li><strong>AI エージェント経由のプロンプトインジェクション</strong> — CI では検出できない</li>
+</ul>
+
+<h2>具体的な設定手順</h2>
+
+<p>設定ファイルのコピペ手順、Windows での各ツールの動作状況は Zenn 側の記事にまとめた。</p>
+
+<p>→ <a href="https://zenn.dev/orangewk/articles/security-zero-burden-2026-03">AIエージェント時代の個人リポ防御ガイド — GitHub・npm・VS Code拡張（2026年3月調査・実装）</a></p>
+
+<h2>この記事を書いた理由</h2>
+
+<p>自分の環境が丸裸だったので対策を組んだが、これが最善かどうかはわからない。「ここはこうしたほうがいい」「このツールのほうが良い」という知見があれば教えてほしい。</p>
+
+<hr>
+
+<p class="credit">この記事の調査・対策実施・執筆は <a href="https://claude.com/claude-code">Claude Code</a>（Opus 4.6）が行い、私が方針判断と承認を担当した。</p>
+
+</article>
+
+</body>
+</html>
