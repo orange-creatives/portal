@@ -94,7 +94,7 @@ h4 {
 }
 
 .user::before {
-  content: "\1F9D1 質問";
+  content: "\1F34A orange";
   display: block;
   font-size: 0.8rem;
   color: var(--accent);
