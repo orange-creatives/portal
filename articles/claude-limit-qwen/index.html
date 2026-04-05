@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude の制限を気にするのをやめた話</title>
+  <meta property="og:title" content="Claude の制限を気にするのをやめた話">
+  <meta property="og:description" content="ClaudeQuotaGate の週、詫び石 $200 をもらって1時間強で $70 溶かし、Alibaba Cloud に逃げた記録。">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/claude-limit-qwen/cover.png">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/claude-limit-qwen/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/claude-limit-qwen/cover.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+</head>
+<body>
+
+<header>
+  <h1>Claude の制限を気にするのをやめた話</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta">
+      <span>2026-04-05</span>
+    </div>
+    <img class="article-cover" src="cover.png" alt="Claude の制限を気にするのをやめた話">
+
+    <h2>水木とClaudeが使えなかった</h2>
+
+    <p>Anthropic がクォータ騒動の対応で揺れていた週、水曜・木曜と Claude がまともに使えない状態になった。「#ClaudeQuotaGate」のタグとともに制限到達のスクショが大量に流れていた。Claude Code にはプロンプトキャッシュが正常に機能しないバグもあり、意図せず大量トークンを消費させていたらしい。</p>
+
+    <p>代替を考えた。Gemini と Codex は有料プランがあるが、どちらも使いたくない。Gemini は挙動が不安定で、Codex（GPT系）は口調が嫌いだ。質問に対して過集中で答えてくる。大局観がなく、仕事のパートナーにしたくない。</p>
+
+    <p>禁断症状的に、木曜のうちに Alibaba Cloud（Qwen API）のアカウントを登録した。すぐ使えるわけではなく、身分証明（免許証かパスポート）の審査に2日ほどかかる。先手を打った。</p>
+
+    <h2>詫び石 $200 が届いた</h2>
+
+    <p>木曜に登録したら、Anthropic から補償として $200 のクレジットが届いた。「これがあれば Alibaba 要らんかも」と思った。</p>
+
+    <p>土曜12時頃、$200 あるしとぶん回したら、1時間強で $70 消費していた。</p>
+
+    <p>これはダメだと判断した。Claude MAX $200 プランだけで生きていくのはどうせ無理。Alibaba に行くことにした。</p>
+
+    <h2>Alibaba Cloud で Qwen を使う</h2>
+
+    <p>ホビー用途なら中華系でも構わない。性能に興味もある。GLM など他にも選択肢はあるが、よく知らないのでメジャーな Qwen にした。</p>
+
+    <p>安い。qwen3.6-plus で入力 $0.5/1M・出力 $3/1M（従量課金）。256k トークンを超えると入力 $2/1M・出力 $6/1M に跳ね上がるが、それでも Claude と比べると30分の1以下だ。無料枠もあるが、1M トークンは57分で溶けた。</p>
+
+    <p>審査が通れば API キーを発行できる。Claude Code のバックエンドとして呼び出す設定も通った（LiteLLM 経由でプロキシが必要だが、動いた）。</p>
+
+    <h2>コーディングプランの契約方法がわからない</h2>
+
+    <p>ここで詰まっている。</p>
+
+    <p>Alibaba Cloud には「コーディングプラン」的なものがあるらしいのだが、どこから契約するのかがわからない。DashScope のコンソールを探しても見当たらない。</p>
+
+    <p>なお現時点の請求額は $1.47 だ。キャッシュが効いているのか、無料枠なのか、まだ反映されていないだけなのか、よくわからない。このあとどうなるかドキドキしている。</p>
+
+  </div><!-- /.article-body -->
+</main>
+
+</body>
+</html>
