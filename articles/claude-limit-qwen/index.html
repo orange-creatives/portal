@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claude の制限を気にするのをやめた話</title>
-  <meta property="og:title" content="Claude の制限を気にするのをやめた話">
+  <title>Claude難民になったので Alibaba Cloud に行ってみた話（Codexではなく）</title>
+  <meta property="og:title" content="Claude難民になったので Alibaba Cloud に行ってみた話（Codexではなく）">
   <meta property="og:description" content="ClaudeQuotaGate の週、詫び石 $200 をもらって1時間強で $70 溶かし、Alibaba Cloud に逃げた記録。">
   <meta property="og:image" content="https://orange-wks.github.io/portal/articles/claude-limit-qwen/cover.png">
   <meta property="og:url" content="https://orange-wks.github.io/portal/articles/claude-limit-qwen/">
@@ -16,7 +16,7 @@
 <body>
 
 <header>
-  <h1>Claude の制限を気にするのをやめた話</h1>
+  <h1>Claude難民になったので Alibaba Cloud に行ってみた話（Codexではなく）</h1>
 </header>
 
 <main>
@@ -27,25 +27,25 @@
     </div>
     <img class="article-cover" src="cover.png" alt="Claude の制限を気にするのをやめた話">
 
-    <h2>水木とClaudeが使えなかった</h2>
+    <h2>火、水、木とClaudeが使えなかった</h2>
 
-    <p>Anthropic がクォータ騒動の対応で揺れていた週、水曜・木曜と Claude がまともに使えない状態になった。「#ClaudeQuotaGate」のタグとともに制限到達のスクショが大量に流れていた。Claude Code にはプロンプトキャッシュが正常に機能しないバグもあり、意図せず大量トークンを消費させていたらしい。</p>
+    <p>Anthropic がクォータ騒動の対応で揺れていた週、火曜・水曜・木曜と Claude がまともに使えない状態になった。「#ClaudeQuotaGate」のタグとともに制限到達のスクショが大量に流れていた。Claude Code にはプロンプトキャッシュが正常に機能しないバグもあり、意図せず大量トークンを消費させていたらしい。</p>
 
-    <p>代替を考えた。Gemini と Codex は有料プランがあるが、どちらも使いたくない。Gemini は挙動が不安定で、Codex（GPT系）は口調が嫌いだ。質問に対して過集中で答えてくる。大局観がなく、仕事のパートナーにしたくない。</p>
+    <p>代替を考えた。Gemini と Codex は有料プランもっているが、どちらも使いたくない。Gemini は自分の言ったことにミラーロックされるし、Codex（GPT系）は口調と重箱つつき具合が嫌いだ。質問に対して過集中で答えてくる。大局観がなく、仕事のパートナーにしたくない。</p>
 
-    <p>禁断症状的に、木曜のうちに Alibaba Cloud（Qwen API）のアカウントを登録した。すぐ使えるわけではなく、身分証明（免許証かパスポート）の審査に2日ほどかかる。先手を打った。</p>
+    <p>禁断症状的に、中華系はどうだろうと調べ、木曜のうちに Alibaba Cloud（Qwen API）のアカウントを登録した。すぐ使えるわけではなく、身分証明（免許証かパスポート）の審査に2日ほどかかる。先手を打った。</p>
 
-    <h2>詫び石 $200 が届いた</h2>
+    <h2>運営の詫び石 $200</h2>
 
-    <p>木曜に登録したら、Anthropic から補償として $200 のクレジットが届いた。「これがあれば Alibaba 要らんかも」と思った。</p>
+    <p>さて週末からQwen使うかと思っていた土曜日12時ころに、Anthropic から補償として $200 のクレジットが届いた。これがあれば Qwen 要らんかも？</p>
 
-    <p>土曜12時頃、$200 あるしとぶん回したら、1時間強で $70 消費していた。</p>
+    <p>と思ったが、よーし200＄なら14時のクオータ回復までぶん回すかと使ったら、1時間強で $70 消費。</p>
 
-    <p>これはダメだと判断した。Claude MAX $200 プランだけで生きていくのはどうせ無理。Alibaba に行くことにした。</p>
+    <p>これはダメだと判断。Claude MAX $200 プランだけで生きていくのは無理筋。Alibaba 利用計画実行だ。</p>
 
     <h2>Alibaba Cloud で Qwen を使う</h2>
 
-    <p>ホビー用途なら中華系でも構わない。性能に興味もある。GLM など他にも選択肢はあるが、よく知らないのでメジャーな Qwen にした。</p>
+    <p>中華系とかいつ急に日本から使えませんってなるかもで仕事で使うのは怖い。しかしホビー用途なら別に構わない気がする。性能に興味もある。GLM など他にも選択肢はあるが、よく知らないのでメジャーな Qwen にした。</p>
 
     <p>安い。qwen3.6-plus で入力 $0.5/1M・出力 $3/1M（従量課金）。256k トークンを超えると入力 $2/1M・出力 $6/1M に跳ね上がるが、それでも Claude と比べると30分の1以下だ。無料枠もあるが、1M トークンは57分で溶けた。</p>
 
@@ -55,9 +55,9 @@
 
     <p>ここで詰まっている。</p>
 
-    <p>Alibaba Cloud には「コーディングプラン」的なものがあるらしいのだが、どこから契約するのかがわからない。DashScope のコンソールを探しても見当たらない。</p>
+    <p>Alibaba Cloud には「コーディングプラン」があるらしいのだが、どこから契約するのかがわからない。いつ見ても「SoldOut」と書いてあるいわゆる「おま国」なんだろうか。</p>
 
-    <p>なお現時点の請求額は $1.47 だ。キャッシュが効いているのか、無料枠なのか、まだ反映されていないだけなのか、よくわからない。このあとどうなるかドキドキしている。</p>
+    <p>なおAPI経由で今日1日でどんだけ金を使ってしまったのかは実はよくわかっていない。無料枠の1Mトークンを利用開始から57分で使い切ったことはメール見てわかっている。ブログ執筆日曜17時時点での請求額は $1.47 だ。キャッシュが効いているのか、無料枠なのか、まだ反映されていないだけなのか、よくわからない。このあとどうなるかドキドキしている。</p>
 
   </div><!-- /.article-body -->
 </main>
