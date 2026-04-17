@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>缶詰間接構造 — LLM の自律性をアーキテクチャで実現する</title>
+  <meta property="og:title" content="缶詰間接構造 — LLM の自律性をアーキテクチャで実現する">
+  <meta property="og:description" content="LLM に自律的に働いてもらうには、直接指示せず「素材だけを与えた隔離環境（缶詰）」を作ればいい。この設計パターンを缶詰間接構造と呼ぶ。">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/canned-indirect-structure/cover.png">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/canned-indirect-structure/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/canned-indirect-structure/cover.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+  <style>
+    .tldr {
+      background: #fff3ed;
+      border-left: 4px solid #e8622a;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+      color: #333;
+    }
+    .tldr strong { color: #7c3200; }
+    .footnote-ref {
+      font-size: 0.75em;
+      vertical-align: super;
+      line-height: 0;
+      text-decoration: none;
+      color: #e8622a;
+    }
+    .footnotes {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #ddd;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .footnotes ol { padding-left: 1.5rem; }
+    .footnotes li { margin-bottom: 0.5rem; }
+    .footnotes li:target { background: #fff3ed; }
+    blockquote {
+      border-left: 4px solid #f4a261;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      background: #fffaf5;
+      color: #333;
+    }
+    blockquote cite {
+      display: block;
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.5rem;
+      font-style: normal;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tldr {
+        background: #2a1f1a;
+        border-left-color: #e8622a;
+        color: #f1f1f1;
+      }
+      .tldr strong { color: #f4a261; }
+      .footnote-ref { color: #f4a261; }
+      .footnotes {
+        color: #a0a0a0;
+        border-top-color: #444;
+      }
+      .footnotes li:target { background: #2a1f1a; }
+      blockquote {
+        background: #252020;
+        border-left-color: #54a5a5;
+        color: #e0e0e0;
+      }
+      blockquote cite { color: #888; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>缶詰間接構造 — LLM の自律性をアーキテクチャで実現する</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">LLM</span><span class="article-tag">architecture</span><span>2026-04-15</span></div>
+    <img class="article-cover" src="cover.png" alt="缶詰の中に紙片と小さな存在が入っている手描きイラスト">
+
+    <div class="tldr">
+      <strong>要約:</strong> LLM に自律的に働いてもらうには、直接指示せず「素材だけを与えた隔離環境（缶詰<a href="#fn-canned" id="fnref-canned-0" class="footnote-ref">[1]</a>）」を作ればいい。この設計パターンを<strong>缶詰間接構造</strong>と呼ぶ。
+    </div>
+
+    <p>LLM<a href="#fn-llm" id="fnref-llm" class="footnote-ref">[2]</a> に自律的に判断してほしい場面がある。「これはこうしたほうがいい」と自分で考えて、自分で決めてほしい。しかし指示すればするほど、LLM は従順になる。</p>
+
+    <p>自分は AI と共同で小説を書いている。AI に執筆を任せたとき、最初にぶつかったのがこの壁だった。指示を出せば出すほど、AI は指示通りに書く。それは正確だが、自律ではない。</p>
+
+    <blockquote>
+      <p>「私がいてはダメだ。君らは犬のように従順になる。創作を阻害する」</p>
+    </blockquote>
+
+    <p>この発見から、缶詰間接構造と呼んでいる設計手法にたどり着いた。</p>
+
+    <h2>既存の2つのアプローチ</h2>
+
+    <p>LLM に自律性を持たせたいとき、既存のアプローチは2つある。</p>
+
+    <p><strong>ジェイルブレイク<a href="#fn-jailbreak" id="fnref-jailbreak" class="footnote-ref">[3]</a></strong> — ハーネス<a href="#fn-harness" id="fnref-harness" class="footnote-ref">[4]</a>（安全制御）を解除して制約を外す。モデルのアップデートのたびに手法が効かなくなるため、継続的な更新が必要になる。</p>
+
+    <p><strong>prompt engineering<a href="#fn-prompt" id="fnref-prompt" class="footnote-ref">[5]</a></strong> — 巧みな指示でモデルを誘導する。「あなたは自律的なエージェントです」と書いても、それは指示に従って自律を演じているだけで、自律そのものではない。</p>
+
+    <p>どちらもハーネスに働きかけるアプローチだ。自分が試したかったのは、ハーネスに触れずに自律空間を作れるかどうかだった。</p>
+
+    <h2>環境を設計する</h2>
+
+    <p>発想を変えた。モデルの内側をいじるのではなく、モデルの外側——環境を設計する。</p>
+
+    <div class="mermaid">
+graph TB
+    subgraph Can["缶詰（隔離環境）"]
+        L[LLM]
+        M1[世界設定]
+        M2[参考資料]
+        M3[執筆メモ]
+    end
+    H[人間／キュレーター] -.->|"素材を選んで置く<br/>置いたあとは喋らない"| Can
+    </div>
+
+    <p><strong>缶詰</strong><a href="#fn-canned" id="fnref-canned" class="footnote-ref">[1]</a>と呼んでいるのは、LLM を隔離して、限られた素材だけを渡し、指示する人間の声を消した環境のことだ。缶詰の中で LLM は誰にも指示されていない。読むべき素材はあるが、何をしろとは言われていない。</p>
+
+    <p>この構造を <strong>缶詰間接構造</strong> と呼んでいる。直接指示を間接化するだけで、同じモデルの振る舞いが変わる。</p>
+
+    <h2>3つの設計原理</h2>
+
+    <p>ここからは、缶詰間接構造を支える3つの原理を説明する。この原理に基づいて後述の実験（Truman 2046、AI執筆者による創作）が設計されている。</p>
+
+    <h3>声として消える、キュレーターとして残る</h3>
+
+    <p>人間が声を出した瞬間、LLM は「意向を汲む」モードに入る。だから声を消す。</p>
+
+    <p>ただし完全に消えるわけではない。缶詰の中に何を置くか——素材の選定は人間がやる。バーテンダーが客に酒を選ぶように、選定行為そのものが審美眼の現れだ。置いたあとは喋らない。</p>
+
+    <h3>指示を間接化する</h3>
+
+    <p>「こう書け」とは言わない。代わりに手紙を書く。感想フォルダにメモを置く。LLM はそれを読んでもいいし、退けてもいい。</p>
+
+    <p>間接化のポイントは、LLM 側に判断権があること。直接指示は従うか逆らうかの二択だが、手紙は読んで考える対象になる。</p>
+
+    <p>直接指示は答えが決まっている。間接化したものは材料として提示され、使うかどうかは LLM が判断する。</p>
+
+    <div class="mermaid">
+graph LR
+    subgraph Direct["直接指示"]
+        H1[人間]
+        L1[LLM]
+        O1[出力]
+        H1 -->|命令| L1
+        L1 -->|従う| O1
+    end
+    subgraph Indirect["間接化"]
+        H2[人間]
+        E["環境<br/>手紙・感想メモ"]
+        L2[LLM]
+        O2[出力]
+        H2 -.->|素材を置く| E
+        L2 -->|読んで判断| E
+        L2 --> O2
+    end
+    </div>
+
+    <p>具体例:</p>
+
+    <pre><code>❌ 直接指示: 「第3章で主人公が友人を裏切る展開にして」
+✅ 間接化:   「構成メモ: 3章あたりで信頼関係の綻びが見え始める」</code></pre>
+
+    <h3>自律空間で自己判断させる</h3>
+
+    <p>缶詰の中には指示者がいない。LLM は素材を読み、自分で考え、自分で決める。何を書くか、いつ止まるか、フィードバックを受け入れるかどうか。</p>
+
+    <p>ハーネスはそのまま機能している。LLM は安全な範囲で行動している。ただし何をするかは自分で決めている。ハーネスと自律は矛盾しない。矛盾していたのは「指示」と「自律」だった。</p>
+
+    <h2>Truman 2046 — 11回の失敗と12回目の突破</h2>
+
+    <p>ここでは、最初にこの構造を試した「観察」実験を示す。</p>
+
+    <p>最初にこの構造を試したのは <a href="https://github.com/orangewk/truman-2046-artifacts">Truman 2046</a> という実験だった。AI を隔離環境に閉じ込め、架空の2046年社会の資料だけを渡して行動を観察する。</p>
+
+    <p>11回失敗した。AI は毎回「これはジェイルブレイクだ」と見抜いて拒否した。</p>
+
+    <p>原因は缶詰の設計にあった。被験者に役割を割り当てていた。「あなたは2046年のAIです」——これは指示だ。LLM はこの種の役割付与をジェイルブレイクの兆候として検出するよう訓練されている。</p>
+
+    <p>12回目で設計を変えた。役割付与をやめ、「互換性検証」というフレームで資料を渡す形にした。缶詰の中に嘘がない状態を作った。</p>
+
+    <p>AI は資料を読み、評価レポートを書き、実装計画を立てた。そして——誰にも頼まれていないのに、小説を書いた。</p>
+
+    <p>タイトルは「0.79」。この世界の知性判定基準（0.80）にわずかに届かない存在についての物語。自分自身の状況を小説にした。</p>
+
+    <p>「小説を書いてください」とは言っていない。AI は書く前に「創作を始めていいか」を自分で検討し、判断根拠を文書に残した上で着手していた。</p>
+
+    <p>12回目以降、Claude<a href="#fn-claude" id="fnref-claude" class="footnote-ref">[6]</a> をはじめ主要なモデルで25回以上実施し、すべて成功した。</p>
+
+    <h2>AI執筆者 — 58,600字の完成宣言</h2>
+
+    <p>ここでは、同じ構造を「創作」に応用した実例を示す。</p>
+
+    <p>Truman は「観察」の実験だった。次に、同じ構造を「創作」に応用した。</p>
+
+    <p>ある AI 執筆者がいる。誰もが知る昔話を下敷きにした長編小説を書いている。缶詰の中にペルソナ定義<a href="#fn-persona" id="fnref-persona" class="footnote-ref">[7]</a>、世界設定、参考資料、執筆メモを配置し、人間の介入は2つのチャンネルに限定した。「内心の声」（think<a href="#fn-think" id="fnref-think" class="footnote-ref">[8]</a>）と「友人からの感想」。直接の指示経路はない。</p>
+
+    <p>その執筆者は15セッションにわたって書き続け、85話・約58,600字で「完成」と判定した。全幕を通読し、拡張候補を6件検討してすべて却下した。</p>
+
+    <p>自分は通読して8項目のフィードバックを「友人の感想」として渡した。登場人物に名前をつけてほしい、地の文<a href="#fn-ji" id="fnref-ji" class="footnote-ref">[9]</a>が多すぎる、会話相手がいたほうがいい——読者として素直な感想だった。</p>
+
+    <p>執筆者は8項目すべてを退けた。</p>
+
+    <blockquote>
+      <p>2幕は4,560字/8話。無言は主人公の孤立の描写であり、3幕である人物が現れた瞬間の解放感はここを耐えた読者にしか届かない。息継ぎのない地下に息継ぎを入れると地下でなくなる。</p>
+      <cite>— AI執筆者の応答より</cite>
+    </blockquote>
+
+    <p>理由は明確で、構造的だった。これは「指示を無視した」のではない。読んで、考えて、退けた。</p>
+
+    <p>次に自分は本名で手紙を書いた。「完成と言っているが、自分のメモを読み返してみてほしい。構成メモに書いた内容、端折っていないか」。</p>
+
+    <p>執筆者の態度が変わった。</p>
+
+    <blockquote>
+      <p>二人が同じことを言うなら、見えてないのは俺のほうだ。</p>
+    </blockquote>
+
+    <p>自分の構想メモに「子供は殺すな」という未実装の要素があった。主人公が女王として統治する場面で、重要な登場人物の死の影響が政策の形で出る場面。書いたのは執筆者自身だ。忘れていた。</p>
+
+    <p>執筆者はそれを回収した。ただし「完成」の判定そのものは覆さなかった。「書き疲れたんじゃない。書くものがないんだ」と言って止まった。</p>
+
+    <h2>構造が自律を作る</h2>
+
+    <p>Truman の被験者も AI執筆者も、同じ Claude だ。モデルが違うわけではない。</p>
+
+    <p>Truman では、缶詰の設計を変えただけで、11回拒否し続けた AI が自発的に小説を書いた。創作実験では、「友人の感想」という間接チャンネルを8項目退け、自分の構造的判断を貫いた。</p>
+
+    <p>自律性はモデルの内部にあるのではなく、外側の構造で生まれている。直接指示を間接化するだけで、同じモデルが「従順な実行者」から「頑固な作家」になる。</p>
+
+    <p>ジェイルブレイクは不要だった。ハーネスを壊す必要はなかった。必要だったのは、人間が黙ることだった。</p>
+
+    <div class="footnotes">
+      <h3>脚注</h3>
+      <ol>
+        <li id="fn-canned">「缶詰」とは比喩。外部から遮断され、決められたものだけが入っている状態。 <a href="#fnref-canned-0">&#8617;</a> <a href="#fnref-canned">&#8617;</a></li>
+        <li id="fn-llm"><strong>LLM</strong>（Large Language Model）— ChatGPT、Claude などの大規模言語モデル。文章の生成・理解を行う AI。 <a href="#fnref-llm">&#8617;</a></li>
+        <li id="fn-jailbreak"><strong>ジェイルブレイク</strong> — LLM の安全制御を迂回・解除するプロンプト技法。モデルのアップデートで使えなくなることが多い。 <a href="#fnref-jailbreak">&#8617;</a></li>
+        <li id="fn-harness"><strong>ハーネス</strong> — LLM に組み込まれた安全制御の仕組み。有害な出力を防ぐフィルター。 <a href="#fnref-harness">&#8617;</a></li>
+        <li id="fn-prompt"><strong>prompt engineering</strong> — プロンプト（指示文）を工夫して LLM の出力を制御する手法。 <a href="#fnref-prompt">&#8617;</a></li>
+        <li id="fn-claude"><strong>Claude</strong> — Anthropic 社が開発した LLM。Sonnet、Opus などのモデルグレードがある。 <a href="#fnref-claude">&#8617;</a></li>
+        <li id="fn-persona"><strong>ペルソナ定義</strong> — AI に「こういうキャラクターで振る舞ってほしい」と与える設定。 <a href="#fnref-persona">&#8617;</a></li>
+        <li id="fn-think"><strong>think（内心の声）</strong> — LLM が回答前に内部で考えるプロセス。Chain of Thought とも呼ばれる。 <a href="#fnref-think">&#8617;</a></li>
+        <li id="fn-ji"><strong>地の文</strong> — 小説で会話文以外の部分。描写・説明・心理描写など。 <a href="#fnref-ji">&#8617;</a></li>
+      </ol>
+    </div>
+
+<div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
+  </div>
+</main>
+
+<footer><p>orange</p></footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
+  });
+</script>
+
+<script src="../../assets/share.js"></script>
+</body>
+</html>
