@@ -1,0 +1,9 @@
+{
+  "title": "間接話法ハック — LLM の自律性をアーキテクチャで実現する",
+  "description": "LLM に自律的に働いてもらうには、直接指示せず「素材だけを与えた隔離環境（缶詰）」を作ればいい。この設計パターンを間接話法ハックと呼んでみることにする。",
+  "date": "2026-04-15",
+  "tags": ["AI", "LLM", "architecture"],
+  "cover": "cover.png",
+  "section": "featured",
+  "order": 0
+}
