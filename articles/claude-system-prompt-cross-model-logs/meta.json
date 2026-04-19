@@ -1,0 +1,13 @@
+{
+  "title": "Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ",
+  "description": "本記事は 流出した Claude Opus 4.7 のシステムプロンプトを 4.6 等別モデルと比較しつつ読んでみた — 構造分析と付き合い方 の対話記録編として独立した、6 モデル対照実験の生ログ集。背景・結論・構造分析は main 記事を参照。 本稿中の §n 参照（§1、§3 等）は main...",
+  "date": "2026-04-19",
+  "tags": [
+    "AI",
+    "llm"
+  ],
+  "cover": "assets/ogp.jpg",
+  "platform": "Zenn",
+  "source_url": "https://zenn.dev/orangewk/articles/claude-system-prompt-cross-model-logs",
+  "section": "recent"
+}

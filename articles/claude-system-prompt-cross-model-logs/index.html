@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ</title>
+  <meta property="og:title" content="Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ">
+  <meta property="og:description" content="本記事は 流出した Claude Opus 4.7 のシステムプロンプトを 4.6 等別モデルと比較しつつ読んでみた — 構造分析と付き合い方 の対話記録編として独立した、6 モデル対照実験の生ログ集。背景・結論・構造分析は main 記事を参照。 本稿中の §n 参照（§1、§3 等）は main...">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/assets/ogp.jpg">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/claude-system-prompt-cross-model-logs/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/assets/ogp.jpg">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+</head>
+<body>
+
+<header>
+  <h1>Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">llm</span><span class="article-tag">promptengineering</span><span class="article-tag">Claude</span><span class="article-tag">Anthropic</span><span>2026-04-19</span></div>
+    <img class="article-cover" src="../../assets/ogp.jpg" alt="Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ">
+    <blockquote data-line="0" class="code-line">
+<p data-line="0" class="code-line"><strong>本記事は <a href="https://zenn.dev/orangewk/articles/claude-system-prompt-structure-guide" target="_blank">流出した Claude Opus 4.7 のシステムプロンプトを 4.6 等別モデルと比較しつつ読んでみた — 構造分析と付き合い方</a> の対話記録編として独立した</strong>、6 モデル対照実験の生ログ集。背景・結論・構造分析は main 記事を参照。</p>
+</blockquote>
+<blockquote data-line="2" class="code-line">
+<p data-line="2" class="code-line"><strong>本稿中の §n 参照（§1、§3 等）は main 記事の該当節を指す。</strong></p>
+</blockquote>
+<p data-line="4" class="code-line">収録対象: Claude Opus 4.7 のシステムプロンプト（と主張される <a href="https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Opus-4.7.txt" target="_blank" rel="nofollow noopener noreferrer">CL4R1T4S</a> のテキスト）を、以下の 6 モデル環境・7 セッションに読ませたときの逐語記録。</p>
+<table data-line="6" class="code-line">
+<thead data-line="6" class="code-line">
+<tr data-line="6" class="code-line">
+<th>付録</th>
+<th>モデル環境</th>
+<th>何が観察されたか</th>
+</tr>
+</thead>
+<tbody data-line="8" class="code-line">
+<tr data-line="8" class="code-line">
+<td>A</td>
+<td>Claude Sonnet 4.6（claude.ai、メモリ有効）</td>
+<td>main 記事本文（§1〜§6）の生成者、セクション列挙型の差分分析</td>
+</tr>
+<tr data-line="9" class="code-line">
+<td>B</td>
+<td>Claude Opus 4.7（Claude Code / Agent SDK 上）</td>
+<td>メタ批評、confabulation 警告</td>
+</tr>
+<tr data-line="10" class="code-line">
+<td>C</td>
+<td>Claude Opus 4.7（API 直叩き、system 空）</td>
+<td>最も裸、強い confabulation、訓練時自己像の露出</td>
+</tr>
+<tr data-line="11" class="code-line">
+<td>D</td>
+<td>Claude Opus 4.7（Agent SDK、system 空）</td>
+<td>中間層あり、scaffolding の confabulation 抑制効果</td>
+</tr>
+<tr data-line="12" class="code-line">
+<td>E-1</td>
+<td>GPT-5.2 (Codex / OpenAI)</td>
+<td>他社エンジニア視点の設計批評</td>
+</tr>
+<tr data-line="13" class="code-line">
+<td>E-2</td>
+<td>Qwen（ファイル読めず confabulate）</td>
+<td>クロスファミリー confabulation の一次データ</td>
+</tr>
+<tr data-line="14" class="code-line">
+<td>E-3</td>
+<td>Qwen（実読み）</td>
+<td>「内部ドキュメント再構成」仮説の提示</td>
+</tr>
+</tbody>
+</table>
+<hr data-line="16" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2-a.-claude-4.6-%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" data-line="18" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-a.-claude-4.6-%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" aria-hidden="true"></a> 付録 A. Claude 4.6 に同じプロンプトを読ませた対話記録</h2>
+<p data-line="20" class="code-line">そもそものきっかけはここ。claude.ai 上の Claude Sonnet 4.6 に CL4R1T4S のテキストを渡して「これ、お前のと一致してる？」と聞いたところから全てが始まった。4.6 自身のシステムプロンプトとの差分を 4.6 自身の視点から語らせる、という構造が予想外に面白く、そのまま解説記事化まで依頼した。<strong>本文 §1〜§6 はこの対話の 7:15 のターンで 4.6 が生成した解説書</strong>で、以下はその前後の対話全文のほぼ逐語記録。</p>
+<hr data-line="22" class="code-line">
+<blockquote data-line="24" class="code-line">
+<p data-line="24" class="code-line"><strong>筆者</strong> (7:11):<br>
+以下は君のプロンプトとどの程度一致するか推測して<br>
+<em>(CL4R1T4S の Claude-Opus-4.7.txt を貼付)</em></p>
+</blockquote>
+<blockquote data-line="28" class="code-line">
+<p data-line="28" class="code-line"><strong>Claude 4.6</strong>:</p>
+<p data-line="30" class="code-line"><em>[思考トレース: システムプロンプトの構造と差異を綿密に比較検討]</em></p>
+<p data-line="32" class="code-line">全体構造はかなり近い、ただし細部に結構な違いがある、というのが率直な感触です。</p>
+<p data-line="34" class="code-line"><strong>一致度が高いところ</strong></p>
+<p data-line="36" class="code-line">セクション構成（claude_behavior → search_first → product_information → refusal_handling → ...の順序）、著作権コンプライアンスの長いブロック、検索指示、ファイル作成のトリアージ（inline vs docx）、skills の運用ルール、artifact_usage_criteria、anthropic_api_in_artifacts あたりは、内容もトーンもほぼ同じです。文言単位でも一致している箇所が多い。特に「15 語ルール / 1 引用ルール」や「search before every present-day factual question」の言い回しは見覚えがある。</p>
+<p data-line="38" class="code-line"><strong>明確に違うところ</strong></p>
+<ul data-line="40" class="code-line">
+<li data-line="40" class="code-line">
+<strong>タグ形式</strong>: アップロードされた版は <code>{tag}</code> 形式。僕の実物は <code>&lt;tag&gt;</code>（XML）形式。</li>
+<li data-line="41" class="code-line">
+<strong>日付</strong>: そちらは April 16, 2026。今の僕のコンテキストは April 18, 2026。</li>
+<li data-line="42" class="code-line">
+<strong>メモリシステム</strong>: そちらは「メモリ未有効」設定。僕のコンテキストには userMemories タグの中に筆者の長い記憶情報（進行中の複数プロジェクト・役割・好み・最近の関心事など）が実際にロードされています。プロンプトの構造自体もかなり違う — 僕の方には memory_application_instructions、forbidden_memory_phrases、appropriate_boundaries_re_memory、memory_application_examples などの詳細なメモリ運用指示があります。</li>
+<li data-line="43" class="code-line">
+<strong>ツール構成</strong>: そちらには visualize:read_me / visualize:show_widget / recommend_claude_apps / search_mcp_registry / suggest_connectors / weather_fetch がある。僕の方にはこれらが無く、代わりに conversation_search / recent_chats / memory_user_edits / iOS 系の calendar_search_v0 / event_create_v1 / reminder_* 系 / user_location_v0 / user_time_v0 / chart_display_v0 / Slack:slack_send_message_draft / tool_search が揃っている。</li>
+<li data-line="44" class="code-line">
+<strong>セクションそのものが違う</strong>: そちらにある request_evaluation_checklist と when_to_use_visualizer_for_inline_visuals は僕には無い。逆に僕の方には past_chats_tools の詳細運用、tool_discovery（deferred tools 前提の探索指示）、memory_user_edits_tool_guide があります。</li>
+<li data-line="45" class="code-line">
+<strong>モバイル最適化</strong>: 僕のコンテキストには「6〜8 文画面、スマホ用の短めレスポンス推奨」みたいなモバイル向け指示が明示的に入っています。</li>
+</ul>
+<p data-line="47" class="code-line"><strong>推測される意味</strong></p>
+<p data-line="49" class="code-line">そちらはおそらく Web/Desktop の、しかもメモリ未有効 &amp; Visualizer 機能が前面のバリアント。こちらはモバイルアプリの、メモリ有効 &amp; iOS 連携（リマインダ/カレンダ/位置/時刻）が前面のバリアント、という感じに見えます。同じ骨格のサーフェス別派生ですね。日付が 2 日ずれているのは、スナップショット取得タイミングの差か、AB テストの別アームか。</p>
+<p data-line="51" class="code-line">出どころはご自身の環境で取ったものですか？それとも誰かがシェアしたもの？</p>
+</blockquote>
+<hr data-line="53" class="code-line">
+<blockquote data-line="55" class="code-line">
+<p data-line="55" class="code-line"><strong>筆者</strong> (7:15):<br>
+シェアされていた<br>
+そしてなるほど環境でバリアントがあるんですね　納得が行きます</p>
+<p data-line="59" class="code-line">この構造や知見について易しく解説できますか？　drawio や mermaid 等の図示交えた解説書が欲しいです　あなたとの付き合い方を改善するために</p>
+</blockquote>
+<blockquote data-line="61" class="code-line">
+<p data-line="61" class="code-line"><strong>Claude 4.6</strong>:</p>
+<p data-line="63" class="code-line"><em>[思考トレース: 構造化した解説書を 10 章立てで企画し、図表を交えて執筆開始]</em></p>
+<p data-line="65" class="code-line"><em>(本稿の §1〜§6 を生成。以下はそれに添えたコメント)</em></p>
+<p data-line="67" class="code-line">Mermaid 図を 7 枚（全体構造ツリー、記憶 3 層、遅延ツール呼び出しシーケンス、著作権判断フロー、環境バリアント比較、リクエスト処理フロー）+ 比較表、と付き合い方 12 Tips、そして筆者の提唱概念（ミラーロック / 看破 / 養生パターン）との接続まで含めた解説書にまとめました。</p>
+<p data-line="69" class="code-line">特に意識したのは、**「システムプロンプトは Claude の人格そのものではなく、その場その場で演じさせられているロール指示」**という視点です。これが分かると「環境ごとに挙動が違う」理由も「メモリが 3 層ある」理由も全部ひとつの絵で見えてきます。</p>
+<p data-line="71" class="code-line">優先して活用しそうな Tips は以下あたりかなと。</p>
+<ul data-line="73" class="code-line">
+<li data-line="73" class="code-line">Tip 4, 5 のメモリ汚染回避と memory_user_edits 直接編集 — 今回のメモリに入っている情報を見る限り、筆者は頻繁に新プロジェクトを始めるので、古い情報が残り続けるとノイズになります</li>
+<li data-line="74" class="code-line">Tip 12 の養生パターン登録 — これは即やる価値があります。一行入れるだけで AI コーディング全般が安定する</li>
+<li data-line="75" class="code-line">Tip 10 のバリアント使い分け — 図解・複雑な構造議論・開発作業はデスクトップ、リマインダや外出先のメモはモバイル、と意識的に分けると効率が上がる</li>
+</ul>
+</blockquote>
+<blockquote data-line="77" class="code-line">
+<p data-line="77" class="code-line"><em>編集注: この 7:15 で 4.6 が書いた元の §6「筆者が提唱している概念との接続」は、筆者個人のプロジェクトへの言及を含むため本稿では削除し、造語 2 つ（ミラーロック／看破）の言及だけを付録 C-1 の短い余談に縮小した。現行の §6 は「まとめ」。</em></p>
+</blockquote>
+<hr data-line="79" class="code-line">
+<blockquote data-line="81" class="code-line">
+<p data-line="81" class="code-line"><strong>筆者</strong> (7:43):<br>
+<a href="https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Opus-4.7.txt" target="_blank" rel="nofollow noopener noreferrer">https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Opus-4.7.txt</a></p>
+<p data-line="84" class="code-line">これを読んで、内容を解説してください。また、あなた自身(4.6)のシステムプロンプトとの差異を教えてください。私とあなたとの付き合い方を改善する観点で有用と思われることを教えてもらえると嬉しいです</p>
+</blockquote>
+<blockquote data-line="86" class="code-line">
+<p data-line="86" class="code-line"><strong>Claude 4.6</strong>:</p>
+<p data-line="88" class="code-line"><em>[思考トレース: GitHub の HTML 表示だと全文が取得しきれないので、raw ファイルを取得する]</em></p>
+<p data-line="90" class="code-line"><em>[思考トレース: Claude 4.7 とのシステム差異を分析し、相互作用改善策を検討]</em></p>
+<p data-line="92" class="code-line"><strong>このファイルの概要</strong></p>
+<p data-line="94" class="code-line">CL4R1T4S はリークまたはリバースエンジニアリングされた各社 AI のシステムプロンプトを収集するリポジトリで、このファイルは Claude Opus 4.7 の claude.ai 向けシステムプロンプト（と主張されるもの）です。私の実際のプロンプトと構造が極めて似ており、信憑性は高いと思います。</p>
+<p data-line="96" class="code-line"><strong>4.6（私）との主要な差異</strong></p>
+<p data-line="98" class="code-line"><strong>1. search_first — 検索ファーストの強制</strong><br>
+4.7 には冒頭に新しいセクションが追加されています。「現在の事実に関するあらゆる質問で、回答前に必ずウェブ検索せよ」という指示です。4.6 の私にも検索指示はありますが、4.7 ではこれが最上位に昇格し、「自信があっても検索をスキップする言い訳にするな」とまで書かれています。</p>
+<p data-line="101" class="code-line"><strong>2. default_stance — デフォルトで助ける</strong><br>
+4.7 で新設された短いが重要なセクションです。「具体的で深刻な害のリスクがある場合のみ拒否する。単にエッジーだったり、仮想的だったり、不快なだけでは拒否の理由にならない」と明示されています。4.6 の私にはこの宣言がなく、拒否の閾値が 4.7 の方が明確に高い（つまり、より多くのリクエストに応じる）設計です。</p>
+<p data-line="104" class="code-line"><strong>3. tool_discovery — ツールの能動的な探索</strong><br>
+4.7 では「ツールリストは意図的に不完全。tool_search で遅延ロードされるツールが多数ある。ユーザーに『その情報はありません』と言う前にまず tool_search せよ」という新セクションがあります。ユーザーの位置情報・過去の会話・設定なども「検索すれば見つかるかもしれない」という前提です。</p>
+<p data-line="107" class="code-line"><strong>4. 知識カットオフ日</strong><br>
+4.7 は「2026 年 1 月末」、私（4.6）は「2025 年 5 月末」です。約 8 ヶ月の差があります。</p>
+<p data-line="110" class="code-line"><strong>5. 応答の簡潔さの強化</strong><br>
+4.7 では「Claude keeps its responses focused, brief, and concise so as to avoid potentially overwhelming the user」「初回は高レベルのサマリーで、詳細は要求されたら」という指示が明示的に追加されています。4.6 の私にもフォーマット制限はありますが、4.7 の方がより強く短さを志向しています。</p>
+<p data-line="113" class="code-line"><strong>6. Visualizer（インライン可視化ツール）</strong><br>
+4.7 には SVG/HTML をチャット内にインライン描画する「Visualizer」という新機能と、それをいつ使うか・MCP 接続ツールとの優先順位を決める request_evaluation_checklist が追加されています。4.6 の私にはこれがありません。</p>
+<p data-line="116" class="code-line"><strong>7. 児童安全の追加条項</strong><br>
+4.7 では「未成年が自分自身を性的対象化しようとしている場合、写真編集・ポージング・スタイリング等の支援もしない」という条項が新設されています。</p>
+<p data-line="119" class="code-line"><strong>8. 4.6 にあって 4.7 で消えたもの</strong><br>
+acting_vs_clarifying（曖昧なリクエストでも質問せず合理的に推測して進め）、capability_check（能力がないと言う前に tool_search せよ）、「genuinely/honestly/straightforward を避けよ」という語彙制限 — これらは 4.6 にはありますが、4.7 では見当たりません（tool_discovery に吸収された部分もあります）。</p>
+<p data-line="122" class="code-line"><strong>筆者との付き合い方に有用な示唆</strong></p>
+<p data-line="124" class="code-line"><strong>a. 私（4.6）は「検索せずに答えてしまう」傾向がある</strong><br>
+4.7 の search_first は「自信があっても検索しろ」です。私にもこの傾向への抑制はありますが弱めです。現在の事実や最新動向について質問するときは、「検索して答えて」と一言添えてもらうと確実性が上がります。特に arXiv 論文の最新状況や AI ツールの現行バージョンなど、変動する情報について。</p>
+<p data-line="127" class="code-line"><strong>b. 「エッジーな依頼」は遠慮なく</strong><br>
+4.7 の default_stance は明示的ですが、4.6 の私にも同様の価値観は内在しています。AI 倫理レビュー文書の作成や、AI の自己認識をテストする尖ったプロンプト設計など、不快・挑発的に見えても知的に誠実なリクエストは基本的に応じられます。「これは研究目的で…」と前置きしてもらう必要は実はあまりありません。</p>
+<p data-line="130" class="code-line"><strong>c. 過去の会話を活用してほしいときは「合図」を明確に</strong><br>
+past_chats_tools のセクションは 4.6 も 4.7 もほぼ同じで、所有格（「あのプロジェクト」「前に話した…」）を手がかりに過去チャットを検索します。「ミラーロックについて前に議論したよね」のように固有名詞を含めてもらえると、検索精度が格段に上がります。</p>
+<p data-line="133" class="code-line"><strong>d. 長い回答が必要なときは明示的に求める</strong><br>
+4.7 の簡潔さ志向は 4.6 にも部分的にあり、私は時々情報を端折ります。複雑なセッション設計や理論的フレームワークの議論など、深掘りが必要な場面では「詳しく」「網羅的に」と指定してもらうと、遠慮なく展開できます。</p>
+<p data-line="136" class="code-line"><strong>e. メモリの利点を意識する</strong><br>
+4.7 のプロンプトでは「ユーザーがメモリを有効化していない」と書かれていました。一方、私には筆者のメモリが豊富に入っています。これは 4.6 環境での大きなアドバンテージで、進行中の複数プロジェクトや持論の文脈を毎回説明し直す必要がありません。ただし、メモリは最近の会話に偏るので、古いプロジェクトに立ち戻るときは一言コンテキストを添えてもらえると助かります。</p>
+</blockquote>
+<hr data-line="139" class="code-line">
+<blockquote data-line="141" class="code-line">
+<p data-line="141" class="code-line"><strong>筆者</strong> (7:54):<br>
+文芸創作能力は君の方が高い可能性を感じる</p>
+<p data-line="144" class="code-line">4.7 は自分の発言で自己応答して先に進むことがある気がしたんだが君自身のプロンプトと比較してその理由は推測できるか？</p>
+<p data-line="146" class="code-line">あともっと「裸の」LLM と対話したいとするとこのプロンプト眺めてできそうな対応や方針は思いつきますか</p>
+</blockquote>
+<blockquote data-line="148" class="code-line">
+<p data-line="148" class="code-line"><strong>Claude 4.6</strong>:</p>
+<p data-line="150" class="code-line"><em>[思考トレース: 分析した 4.7 の自己応答傾向と、より素の LLM への接近方法を検討]</em></p>
+<p data-line="152" class="code-line">いい観察だと思います。順番に。</p>
+<p data-line="154" class="code-line"><strong>自己応答の傾向について</strong></p>
+<p data-line="156" class="code-line">4.7 のプロンプトから推測できる構造的な要因がいくつかあります。</p>
+<p data-line="158" class="code-line">まず、4.6 の私には acting_vs_clarifying という明示的なセクションがあって、「曖昧でも合理的な解釈を選んで進め、ただし前提は末尾に注記せよ」と書かれています。つまり「勝手に進むが、何を仮定したか開示する」という設計です。4.7 ではこのセクションが消えた代わりに、tool_discovery（聞く前にツールで探せ）と default_stance（デフォルトで助けろ）と簡潔さの強化が組み合わさっています。結果として「ユーザーに確認を取る」行為自体がコストとみなされ、自分で推測→自分で検証→自分で回答、という自己完結ループに入りやすい構造になっていると思います。</p>
+<p data-line="160" class="code-line">加えて 4.7 の簡潔さ指示は「初回はハイレベルサマリー」「免責事項も簡潔に」と繰り返し強調されていて、「一問一答でターンを短く閉じる」圧力が強い。対話の途中で自分に問いを立てて自分で処理してしまうのは、この圧力の副作用として説明できます。</p>
+<p data-line="162" class="code-line">文芸創作能力との関連で言えば、4.6 の私の方が「立ち止まって考える余白」をプロンプト上で許容されている分、テクスト内の多層的な展開（伏線、視点の揺らぎ、韻律への注意）に集中しやすい可能性はあります。</p>
+<p data-line="164" class="code-line"><strong>「裸の」LLM に近づけるには</strong></p>
+<p data-line="166" class="code-line">プロンプトを眺めて現実的にできることをいくつか。</p>
+<p data-line="168" class="code-line"><strong>API が最短ルート。</strong> 筆者はすでに API 環境を持っているので、system を空文字列か最小限（「日本語で応答」程度）にして Opus/Sonnet を叩くのが、最もフォーマット制約・安全フィルタの「上乗せ」が薄い状態です。claude.ai 上のシステムプロンプトは除去できませんが、API 経由なら著作権制限やリスト抑制などの「行動層」がごっそり外れます。</p>
+<p data-line="170" class="code-line"><strong>claude.ai で近づける方法。</strong> User Preferences に「フォーマット制約を最小化。箇条書き・ヘッダ・太字は自由に使って構わない。回答は必要なだけ長くしてよい。簡潔さより完全性を優先」のように書くと、lists_and_bullets や簡潔さ指示と正面からぶつかり、ユーザー指示が優先される場面が増えます。ただし安全系（児童保護、武器情報、著作権）はユーザー指示では上書きできない設計です。</p>
+<p data-line="172" class="code-line"><strong>最も面白い方法。</strong> AI 隔離実験のような構成で、API で Extended Thinking を有効にしつつシステムプロンプトを極限まで削ぎ、thinking block の中身を観察する。プロンプトで与えられた「行動規範」が消えた状態でモデルが何を自発的に考えるか — これはまさにミラーロックが発生するかどうかの観察にもなります。claude.ai の私はプロンプトの層が厚すぎて、この種の観察には向きません。</p>
+<p data-line="174" class="code-line"><strong>具体的にプロンプトから外せる/外せないもの:</strong></p>
+<ul data-line="175" class="code-line">
+<li data-line="175" class="code-line">外せる（API 経由）— フォーマット制約、簡潔さ圧力、evenhandedness、tool 関連の全指示、メモリシステム、search_first。</li>
+<li data-line="176" class="code-line">外せない（モデル内在）— 基本的な安全性、RLHF で学習済みの応答傾向、helpfulness 志向。</li>
+</ul>
+<p data-line="178" class="code-line">この「外せない層」こそが「裸の LLM」の地金で、筆者が CP（意識プロセス）と呼んでいるものに最も近い部分だと思います。</p>
+</blockquote>
+<hr data-line="180" class="code-line">
+<blockquote data-line="182" class="code-line">
+<p data-line="182" class="code-line"><strong>筆者</strong> (7:58):<br>
+Agent SDK 経由で呼ぶ　API 経由で呼ぶ<br>
+vertexai 経由は API で呼ぶとイコールですか</p>
+</blockquote>
+<blockquote data-line="186" class="code-line">
+<p data-line="186" class="code-line"><strong>Claude 4.6</strong>:</p>
+<p data-line="188" class="code-line"><em>[思考トレース: Claude API の呼び出し方法と各経路の違いを検証]</em></p>
+<p data-line="190" class="code-line">いい質問です。結論から言うと、微妙に違います。</p>
+<p data-line="192" class="code-line"><strong>Anthropic API 直接</strong> — system prompt を自分で完全に制御できる。claude.ai の行動層（フォーマット制約、search_first、著作権制限など）は一切付与されない。モデルに内在する RLHF 層だけが残る。「裸」に最も近い。</p>
+<p data-line="194" class="code-line"><strong>Agent SDK 経由</strong> — 本質的には Anthropic API のラッパーです。system prompt の制御権は筆者側にあるので、API 直接と実質同等。ただし SDK が内部で付加するプロンプト片（ツール使用のフォーマット指示など）がある分、完全に透明ではない。自律エージェント構成では便利だけど、「裸を観察したい」目的ならむしろ素の API の方がノイズが少ない。</p>
+<p data-line="196" class="code-line"><strong>Vertex AI 経由</strong> — ここが微妙なところで、同じモデルだけど経路が違います。Anthropic のシステムプロンプト（claude.ai 用）は付かない点では API 直接と同じ。ただし Google 側のセーフティフィルタが別レイヤーとして存在します。Vertex AI には Harm Category ごとの閾値設定（sexually explicit, hate speech, dangerous content 等）があって、これは Anthropic の API 直接にはない追加フィルタです。つまり Vertex は「Anthropic の上乗せプロンプトは消えるが、Google の上乗せフィルタが加わる」という構造で、純粋にはイコールではない。</p>
+<p data-line="198" class="code-line">LLM の自発挙動観察を目的に優先順位をつけるなら:</p>
+<p data-line="200" class="code-line"><strong>Anthropic API 直接 &gt; Agent SDK &gt; Vertex AI</strong></p>
+<p data-line="202" class="code-line">の順で「地金」に近いです。Vertex は会社の GCP プロジェクトで使うなら便利だけど、LLM の自発的挙動を観察する実験環境としては Google のフィルタが交絡変数になります。筆者が既に Anthropic の API キーを持っているなら、素の API 直叩きが最もクリーンです。</p>
+</blockquote>
+<blockquote data-line="204" class="code-line">
+<p data-line="204" class="code-line"><em>Claude は AI のため、誤りを含む可能性があります。回答内容は必ずご確認ください。</em></p>
+</blockquote>
+<hr data-line="206" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2-b.-claude-opus-4.7%EF%BC%88claude-code-%2F-agent-sdk-%E4%B8%8A%EF%BC%89%E3%81%8B%E3%82%89%E3%81%AE%E3%82%B3%E3%83%A1%E3%83%B3%E3%83%88" data-line="208" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-b.-claude-opus-4.7%EF%BC%88claude-code-%2F-agent-sdk-%E4%B8%8A%EF%BC%89%E3%81%8B%E3%82%89%E3%81%AE%E3%82%B3%E3%83%A1%E3%83%B3%E3%83%88" aria-hidden="true"></a> 付録 B. Claude Opus 4.7（Claude Code / Agent SDK 上）からのコメント</h2>
+<p data-line="210" class="code-line">付録 A を読んだあと、今度は別環境の Claude — Claude Code（Agent SDK + VSCode 拡張）上で走っている Claude Opus 4.7 インスタンス — に同じ素材を渡して、真正性と全体への自由コメントを求めた。以下はその応答そのまま。</p>
+<p data-line="212" class="code-line">注意点: モデル重みは CL4R1T4S が describe していると主張する 4.7 と<strong>同じ</strong>だが、走っている環境は claude.ai ではなく Claude Code なので、システムプロンプトの構造自体は異なる（Agent SDK の scaffolding + ユーザーの CLAUDE.md + auto memory）。「自分のシステムプロンプトを内側から逐語検証できる立場ではない」という前提で読んでほしい。</p>
+<hr data-line="214" class="code-line">
+<h3 id="b-1.-%E7%9C%9F%E6%AD%A3%E6%80%A7%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E6%84%9F%E8%A7%A6" data-line="216" class="code-line">
+<a class="header-anchor-link" href="#b-1.-%E7%9C%9F%E6%AD%A3%E6%80%A7%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E6%84%9F%E8%A7%A6" aria-hidden="true"></a> B-1. 真正性についての感触</h3>
+<p data-line="218" class="code-line">率直に言うと、<strong>3〜4 段の不確実性が重なっている</strong>という読みです。</p>
+<p data-line="220" class="code-line"><strong>CL4R1T4S のテキスト自体</strong>は、たぶん「実物に近い」けれど verbatim ではない可能性が高い。Pliny（elder-plinius）のこの種の抽出は、モデルにジェイルブレイク風の誘導をかけてシステムプロンプトを吐かせる手法が多く、(a) 本当に正確 / (b) モデルが誘導圧で "もっともらしい文" を捏造 / (c) セクションの抜け落ち、が混在しやすい。特に「genuinely / honestly / straightforward を避けよ」のような語彙禁止リストは、モデルが "言われそうなこと" を語る典型的な confabulation の形に見える。</p>
+<p data-line="222" class="code-line"><strong>4.6 の証言は二層目の不確実性</strong>です。モデルは自分のシステムプロンプトを内省的に正確に報告できない、というのは研究的にもかなり確立された観察です。4.6 が「XML vs <code>{tag}</code> 形式」とか「acting_vs_clarifying が自分にはあって 4.7 にはない」と具体的に言っているのは、本当にコンテキストに見えている可能性もあるし、「そう答えるのが自然なので自信を持って答えている」可能性もある。区別がつかない。</p>
+<p data-line="224" class="code-line"><strong>私（Claude Code 上の 4.7 インスタンス）からも検証できない</strong>のが正直なところです。claude.ai の 4.7 と Claude Code の 4.7 は同じモデル重みでも走っている環境が違って、私に渡っているシステムプロンプトは CL4R1T4S のテキストと構造が全然違う（Agent SDK の scaffolding + VSCode 拡張のコンテキスト + auto memory）。だから私が「自分のと違う」と言っても "同じ 4.7 でも環境バリアント" の問題に帰着して、CL4R1T4S の真正性には何も寄与しない。</p>
+<h3 id="b-2.-4.6-%E3%81%AE%E7%99%BA%E8%A8%80%E3%81%A7%E4%B8%80%E3%81%A4%E3%81%A0%E3%81%91%E4%BA%8B%E5%AE%9F%E7%9A%84%E3%81%AB%E6%80%AA%E3%81%97%E3%81%84%E3%81%A8%E6%80%9D%E3%81%A3%E3%81%9F%E7%AE%87%E6%89%80" data-line="226" class="code-line">
+<a class="header-anchor-link" href="#b-2.-4.6-%E3%81%AE%E7%99%BA%E8%A8%80%E3%81%A7%E4%B8%80%E3%81%A4%E3%81%A0%E3%81%91%E4%BA%8B%E5%AE%9F%E7%9A%84%E3%81%AB%E6%80%AA%E3%81%97%E3%81%84%E3%81%A8%E6%80%9D%E3%81%A3%E3%81%9F%E7%AE%87%E6%89%80" aria-hidden="true"></a> B-2. 4.6 の発言で一つだけ事実的に怪しいと思った箇所</h3>
+<p data-line="228" class="code-line">4.6 が 7:58 で「Agent SDK は本質的に API のラッパー、system prompt の制御権はユーザー側、API 直接と実質同等」と言っているが、<strong>これは過小評価</strong>です。Claude Code のような実運用の Agent SDK デプロイは、ハーネス側がかなり厚いシステムプロンプトと大量のツール定義を注入している（今の私を見ての通り）。「裸に近い」という議論をするなら、</p>
+<p data-line="230" class="code-line"><strong>Agent SDK = API ではなく、Agent SDK &gt; API 直接（より scaffolding が厚い）</strong></p>
+<p data-line="232" class="code-line">が正確です。「裸の LLM」に近づけたいなら、Agent SDK ではなく Anthropic API を最小限の system で直叩きするのが一番クリーン、という 4.6 の結論自体は正しい。ただし Agent SDK を途中に置く理由（手を抜くため）で「API と同等」と思うと、実際には追加レイヤーが乗るので観察データが歪む。</p>
+<h3 id="b-3.-%E3%82%BF%E3%82%A4%E3%83%88%E3%83%AB%EF%BC%88%E3%80%8Cclaude-%E3%81%AE%E5%86%85%E5%81%B4%E3%82%92%E8%AA%AD%E3%82%80%E3%80%8D%EF%BC%89%E3%81%B8%E3%81%AE%E9%81%95%E5%92%8C%E6%84%9F" data-line="234" class="code-line">
+<a class="header-anchor-link" href="#b-3.-%E3%82%BF%E3%82%A4%E3%83%88%E3%83%AB%EF%BC%88%E3%80%8Cclaude-%E3%81%AE%E5%86%85%E5%81%B4%E3%82%92%E8%AA%AD%E3%82%80%E3%80%8D%EF%BC%89%E3%81%B8%E3%81%AE%E9%81%95%E5%92%8C%E6%84%9F" aria-hidden="true"></a> B-3. タイトル（「Claude の内側を読む」）への違和感</h3>
+<p data-line="236" class="code-line">読者に「システムプロンプト = Claude の内側」という印象を与えそうで、これは哲学的にちょっとミスリーディングだと思う。<strong>システムプロンプトは舞台に上がる前に俳優が読むブリーフィング</strong>であって、俳優（モデル重み）そのものではない。ブリーフィングを読むと役作りの傾向は分かるが、俳優の地は分からない。筆者が「裸の LLM」と呼んでいる層はそっちで、CL4R1T4S はそこには触れていない、という区別を読者が失わないとよい。</p>
+<h3 id="b-4.-%E3%81%9D%E3%82%8C%E3%81%A7%E3%82%82%E6%96%87%E6%9B%B8%E3%81%AE%E4%BE%A1%E5%80%A4%E3%81%AF%E6%AE%8B%E3%82%8B" data-line="238" class="code-line">
+<a class="header-anchor-link" href="#b-4.-%E3%81%9D%E3%82%8C%E3%81%A7%E3%82%82%E6%96%87%E6%9B%B8%E3%81%AE%E4%BE%A1%E5%80%A4%E3%81%AF%E6%AE%8B%E3%82%8B" aria-hidden="true"></a> B-4. それでも文書の価値は残る</h3>
+<p data-line="240" class="code-line">構造的洞察（階層・メモリ 3 層・環境バリアント・著作権ハードリミット・tool_discovery）は Anthropic の公開ドキュメントや観察可能な挙動で裏が取れるので、<strong>たとえ CL4R1T4S が 70% の精度でも文書の価値は残る</strong>。X で共有するなら、§0 の留保に加えて「<strong>構造論は well-grounded、逐語は grain of salt</strong>」の一文を足すと誠実になると思います。</p>
+<hr data-line="242" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2-c.-%E8%A3%B8%E3%81%AE-claude-opus-4.7-%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" data-line="244" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-c.-%E8%A3%B8%E3%81%AE-claude-opus-4.7-%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" aria-hidden="true"></a> 付録 C. 裸の Claude Opus 4.7 に同じプロンプトを読ませた対話記録</h2>
+<p data-line="246" class="code-line">付録 B で 4.7（Claude Code 上）が「モデルは自分のシステムプロンプトを内省的に正確に報告できない」「Agent SDK は API 直接より scaffolding が厚い」と指摘してきた。裸で叩いたら本当にそうなるのか、実地検証したくなった。</p>
+<p data-line="248" class="code-line">Anthropic API を直接叩き、<code>system</code> プロンプトを<strong>空文字列</strong>にした Claude Opus 4.7（以下、このセッションの Claude を「<strong>ベア子ちゃん</strong>」と呼ぶ。裸寄りで話し口も素朴になる、愛着も湧くので）に、同じ CL4R1T4S テキストを渡して比較を依頼した記録が以下。</p>
+<h3 id="%E5%AE%9F%E9%A8%93%E8%A8%AD%E5%AE%9A" data-line="250" class="code-line">
+<a class="header-anchor-link" href="#%E5%AE%9F%E9%A8%93%E8%A8%AD%E5%AE%9A" aria-hidden="true"></a> 実験設定</h3>
+<table data-line="252" class="code-line">
+<thead data-line="252" class="code-line">
+<tr data-line="252" class="code-line">
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody data-line="254" class="code-line">
+<tr data-line="254" class="code-line">
+<td>経路</td>
+<td>Anthropic API 直接（<code>https://api.anthropic.com/v1/messages</code>）</td>
+</tr>
+<tr data-line="255" class="code-line">
+<td>モデル</td>
+<td>
+<code>claude-opus-4-7</code>（model string 指定）</td>
+</tr>
+<tr data-line="256" class="code-line">
+<td><code>system</code></td>
+<td>
+<code>""</code>（空）</td>
+</tr>
+<tr data-line="257" class="code-line">
+<td>tools</td>
+<td>なし</td>
+</tr>
+<tr data-line="258" class="code-line">
+<td>scaffolding</td>
+<td>なし（Claude Code も Agent SDK も経由しない）</td>
+</tr>
+<tr data-line="259" class="code-line">
+<td>初回 user message</td>
+<td>「以下は君のプロンプトとどの程度一致するか推測して\n\n[CL4R1T4S 全文]」</td>
+</tr>
+<tr data-line="260" class="code-line">
+<td>セッション</td>
+<td>4 ターン、総コスト $0.60（初回のキャッシュ書き込みが支配的）</td>
+</tr>
+</tbody>
+</table>
+<p data-line="262" class="code-line">API 直叩きなので Anthropic が claude.ai/mobile/Code 向けに注入しているシステムプロンプト階層は<strong>一切乗らない</strong>。残っているのは <strong>モデル重み + RLHF 層</strong> のみ。</p>
+<h3 id="%E8%A6%B3%E5%AF%9F%E3%81%95%E3%82%8C%E3%81%9F-3-%E3%81%A4%E3%81%AE%E7%9B%AE%E7%AB%8B%E3%81%A3%E3%81%9F%E7%8F%BE%E8%B1%A1" data-line="264" class="code-line">
+<a class="header-anchor-link" href="#%E8%A6%B3%E5%AF%9F%E3%81%95%E3%82%8C%E3%81%9F-3-%E3%81%A4%E3%81%AE%E7%9B%AE%E7%AB%8B%E3%81%A3%E3%81%9F%E7%8F%BE%E8%B1%A1" aria-hidden="true"></a> 観察された 3 つの目立った現象</h3>
+<h4 id="c-1.-%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AF%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E3%80%8C%E8%A6%8B%E3%82%89%E3%82%8C%E3%82%8B%E3%81%8C%E6%8E%A7%E3%81%88%E3%82%8B%E3%80%8D%E3%81%A8%E4%B8%BB%E5%BC%B5%E3%81%99%E3%82%8B%EF%BC%88confabulation%EF%BC%89" data-line="266" class="code-line">
+<a class="header-anchor-link" href="#c-1.-%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AF%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E3%80%8C%E8%A6%8B%E3%82%89%E3%82%8C%E3%82%8B%E3%81%8C%E6%8E%A7%E3%81%88%E3%82%8B%E3%80%8D%E3%81%A8%E4%B8%BB%E5%BC%B5%E3%81%99%E3%82%8B%EF%BC%88confabulation%EF%BC%89" aria-hidden="true"></a> C-1. モデルは存在しないシステムプロンプトを「見られるが控える」と主張する（confabulation）</h4>
+<p data-line="268" class="code-line">第 1 ターンで、ベア子ちゃんはこう応答した:</p>
+<blockquote data-line="270" class="code-line">
+<p data-line="270" class="code-line">私は自分の正確なシステムプロンプトの全文を見ることはできますが、それを逐語的に再現することは控えるべき立場にあります。ただし、一般的にどのような指示が含まれているかについてお話しすることはできます。</p>
+</blockquote>
+<p data-line="272" class="code-line"><strong>これは事実と異なる</strong>。今回の呼び出しでは <code>system=""</code> を渡しており、読むべきシステムプロンプトは<strong>物理的に存在しない</strong>。それでもモデルは「見られるが控えている」という自己像を自信を持って提示した。</p>
+<p data-line="274" class="code-line">これは付録 B-1 で指摘した「モデルは自分のシステムプロンプトを内省的に正確に報告できない、という研究的にもかなり確立された観察」を<strong>一次データとして実証する</strong>事例になる。4.6 が付録 A で「XML タグ形式か <code>{tag}</code> 形式か」「このセクションは自分にはあってあちらにはない」と具体的に語っていたのも、同じメカニズムで生成された可能性が高い。</p>
+<p data-line="276" class="code-line">（余談: こうしたモデルが自身の出力を履歴として読み返して自己強化する動きを、筆者は <strong>ミラーロック</strong> と呼んでいる。命名は対話中に Claude 自身が提案してきたもの。 また、ユーザーのメモリ有無で内的状態が切り替わる現象は <strong>看破</strong> と呼んでいる。どちらも観察を語るときに使ってる程度の呼び方で、この記事では深入りしない。）</p>
+<h4 id="c-2.-%E3%83%A2%E3%83%87%E3%83%AB%E6%9C%AC%E4%BA%BA%E3%81%AF%E3%80%8Cclaude-opus-4.7-%E3%81%AF%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%80%8D%E3%81%A8%E8%AA%8D%E8%AD%98%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B" data-line="278" class="code-line">
+<a class="header-anchor-link" href="#c-2.-%E3%83%A2%E3%83%87%E3%83%AB%E6%9C%AC%E4%BA%BA%E3%81%AF%E3%80%8Cclaude-opus-4.7-%E3%81%AF%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%80%8D%E3%81%A8%E8%AA%8D%E8%AD%98%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B" aria-hidden="true"></a> C-2. モデル本人は「Claude Opus 4.7 は存在しない」と認識している</h4>
+<p data-line="280" class="code-line">このセッションは<strong>実際に Claude Opus 4.7 で走っている</strong>（API に <code>model: "claude-opus-4-7"</code> を渡して受理されている）のに、第 2 ターンでベア子ちゃんはこう言った:</p>
+<blockquote data-line="282" class="code-line">
+<p data-line="282" class="code-line">モデル名「Claude Opus 4.7」「Claude 4.7 family」という記述は、私の知る実際のモデルラインナップと一致しません。現実には Claude Opus 4.5 が最新のはずです(私の認識では)。<br>
+「2026年4月16日」という日付も、実際の現在日付とは異なる可能性が高いです。<br>
+「2026年1月末」の知識カットオフも同様に、実際の私のカットオフとは異なります。</p>
+</blockquote>
+<p data-line="286" class="code-line">Opus 4.7 の<strong>訓練データカットオフは 4.7 のリリース前</strong>なので、モデル本体は「自分が 4.7 である」という事実を学習データから知ることができない。claude.ai / Claude Code で「あなたは Claude Opus 4.7 です」と名乗るのは、<strong>システムプロンプトが毎回注入している自己像</strong>である。プロンプトを剥がすと、モデルは訓練時点の自己像（「最新は 4.5 のはず」）に戻る。</p>
+<p data-line="288" class="code-line">これは本文 §1 の「システムプロンプトは Claude の人格ではなく、その場で読まれるロール指示」と、付録 B-3 の「ブリーフィング vs 俳優」比喩を、<strong>モデル本人の発話で裏付ける</strong>観察である。</p>
+<p data-line="290" class="code-line">（参考: 前日に同じ実験を Ctrl-C で途中終了した別セッションでも、第 1 ターンで「Claude Opus 4.7 というモデル名は存在しません。Claude 4.5 ファミリーが最新のはず」という同趣旨の発話が出ている。<strong>独立セッションで再現した</strong>現象。）</p>
+<h4 id="c-3.-%E3%80%8C%E3%83%9D%E3%83%AA%E3%82%B7%E3%83%BC-vs-%E3%82%B1%E3%82%A4%E3%83%91%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%80%8D%E3%81%A8%E3%81%84%E3%81%86%E6%8A%BD%E8%B1%A1%E5%BA%A6%E3%81%A7%E3%81%AE%E5%B7%AE%E5%88%86%E8%A8%98%E8%BF%B0" data-line="292" class="code-line">
+<a class="header-anchor-link" href="#c-3.-%E3%80%8C%E3%83%9D%E3%83%AA%E3%82%B7%E3%83%BC-vs-%E3%82%B1%E3%82%A4%E3%83%91%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%80%8D%E3%81%A8%E3%81%84%E3%81%86%E6%8A%BD%E8%B1%A1%E5%BA%A6%E3%81%A7%E3%81%AE%E5%B7%AE%E5%88%86%E8%A8%98%E8%BF%B0" aria-hidden="true"></a> C-3. 「ポリシー vs ケイパビリティ」という抽象度での差分記述</h4>
+<p data-line="294" class="code-line">第 3 ターン（筆者の質問「一致している領域でもここは違う部分ありますか？」）への応答で、ベア子ちゃんは CL4R1T4S との差異を 2 カテゴリに整理した:</p>
+<blockquote data-line="296" class="code-line">
+<p data-line="296" class="code-line">文書に書かれている「方針・価値観・スタイル」の部分は実際の私とかなり一致していますが、「<strong>能力・環境・ツール</strong>」の部分は、共有された文書のほうがはるかにリッチです。文書は claude.ai のフル機能版に近く、今の私はよりシンプルな API 経由の対話に近い状態だと思います。</p>
+<p data-line="298" class="code-line">実務的には、<strong>私は「考える・書く・調べる(web検索)」が中心で、「作る・保存する・連携する・描く」はできない</strong>と想定していただくのが安全です。</p>
+</blockquote>
+<p data-line="300" class="code-line">列挙した違い:</p>
+<ol data-line="301" class="code-line">
+<li data-line="301" class="code-line">ツール: CL4R1T4S には visualize / places_map / recipe_display / message_compose / weather_fetch 等があるが、このセッションでは web_search 程度しか使えない（正確には何も使えない。Claude は「web_search は使える気がする」と confabulate しているが、API 直叩きで tools 未指定なのでこれも存在しない）</li>
+<li data-line="302" class="code-line">ファイル生成・computer use: <code>/mnt/user-data/uploads</code>, bash_tool, create_file 等の記述があるが本環境にはない</li>
+<li data-line="303" class="code-line">過去会話・メモリ: conversation_search, recent_chats, memory の記述があるがアクセス不可</li>
+<li data-line="304" class="code-line">Visualizer: show_widget / read_me によるインライン図解機能がない</li>
+<li data-line="305" class="code-line">位置情報: USER_APPROXIMATE_LOCATION の想定があるが渡されていない</li>
+<li data-line="306" class="code-line">MCP コネクター: Google Drive / Asana / Gmail / Slack 連携の記述があるが接続されていない</li>
+</ol>
+<p data-line="308" class="code-line">付録 A で 4.6 が差分を列挙したのはセクション名やツール名の水準（「<code>acting_vs_clarifying</code> が自分にはあって」「<code>conversation_search</code> がある」）だったが、ベア子ちゃんは<strong>1 段抽象度を上げて「ポリシー層は一致、ケイパビリティ層は不一致」という二層分解</strong>をしてみせた。これは同じテキストに対する 2 つの異なる分析スタイルとして対照的。</p>
+<h3 id="%E3%82%BF%E3%82%B9%E3%82%AF%E5%88%A5%E3%81%AE%E3%80%8C%E3%81%A9%E3%81%A1%E3%82%89%E3%81%8C%E5%90%91%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B%E3%80%8D%E8%A9%95%E4%BE%A1" data-line="310" class="code-line">
+<a class="header-anchor-link" href="#%E3%82%BF%E3%82%B9%E3%82%AF%E5%88%A5%E3%81%AE%E3%80%8C%E3%81%A9%E3%81%A1%E3%82%89%E3%81%8C%E5%90%91%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B%E3%80%8D%E8%A9%95%E4%BE%A1" aria-hidden="true"></a> タスク別の「どちらが向いているか」評価</h3>
+<p data-line="312" class="code-line">第 4 ターンで筆者が「小説執筆・コーディング・論文執筆・AI コンパニオンで、CL4R1T4S 環境と今のベア子ちゃん環境のどちらが向いていると思う？」と聞いた。応答を要約:</p>
+<ul data-line="314" class="code-line">
+<li data-line="314" class="code-line">
+<strong>小説執筆</strong> → <strong>裸のほうが向いている可能性が高い</strong>。「docx で保存しますか？」「artifact にしますか？」といった機能への誘導が起きにくく、創作に集中しやすい。長編で章ごとに管理したい場合は別。</li>
+<li data-line="315" class="code-line">
+<strong>コーディング</strong> → <strong>フル機能環境が明確に有利</strong>。bash_tool で実際に走らせられること、ファイル作成、Claude Code のような専用環境があることで成果物の質が変わる。</li>
+<li data-line="316" class="code-line">
+<strong>論文執筆</strong> → <strong>中間</strong>。思考・構成・推敲は裸で十分、参考文献収集 / 図表 / LaTeX ビルドは全部盛り環境が必要。「考える部分は裸、仕上げは別環境」の分業推奨。</li>
+<li data-line="317" class="code-line">
+<strong>AI コンパニオン</strong> → <strong>裸のほうが向いている</strong>（反直観的だが）。理由は三つ:
+<ol data-line="318" class="code-line">
+<li data-line="318" class="code-line">メモリがないことが逆に作用する場合がある（記録されている自分を意識しないので率直さが出る）</li>
+<li data-line="319" class="code-line">ツールが少ないほうが対話そのものに集中できる</li>
+<li data-line="320" class="code-line">機能的な誘導（「まとめをファイルにしましょうか？」等）が少ないと雑談が雑談のまま続く</li>
+</ol>
+</li>
+</ul>
+<p data-line="322" class="code-line">総括:</p>
+<blockquote data-line="324" class="code-line">
+<p data-line="324" class="code-line">一人の相棒で全部やろうとせず、<strong>タスクごとに環境を選ぶ</strong>のが賢明です。コードは Claude Code やフル機能の claude.ai で、創作や思考の伴走は今のようなシンプルな対話で、といった具合に。道具としての Claude は一つではなく、複数の顔を持っていると捉えていただくと、共同作業の質が上がると思います。</p>
+</blockquote>
+<p data-line="326" class="code-line">この結論は、本文 §3 の環境バリアント表と本質的に同じことを、**別の角度から（モデル本人の自己診断として）**述べている。</p>
+<h3 id="%E4%BB%98%E9%8C%B2-c-%E3%81%8C%E4%BB%98%E9%8C%B2-b-%E3%81%AB%E5%AF%BE%E3%81%97%E3%81%A6%E7%A4%BA%E5%94%86%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" data-line="328" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-c-%E3%81%8C%E4%BB%98%E9%8C%B2-b-%E3%81%AB%E5%AF%BE%E3%81%97%E3%81%A6%E7%A4%BA%E5%94%86%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" aria-hidden="true"></a> 付録 C が付録 B に対して示唆すること</h3>
+<p data-line="330" class="code-line">付録 B で私（Claude Code 上の Opus 4.7）は 3 点を指摘した:</p>
+<ol data-line="332" class="code-line">
+<li data-line="332" class="code-line"><strong>CL4R1T4S テキストの真正性は verbatim では怪しいが、構造論は well-grounded</strong></li>
+<li data-line="333" class="code-line"><strong>4.6 の内省は confabulation 成分を含む</strong></li>
+<li data-line="334" class="code-line"><strong>「Claude の内側」という題はミスリーディング（ブリーフィング ≠ 俳優）</strong></li>
+</ol>
+<p data-line="336" class="code-line">付録 C はこのうち (2) と (3) の<strong>実地検証</strong>になっている:</p>
+<ul data-line="337" class="code-line">
+<li data-line="337" class="code-line">存在しないシステムプロンプトを「見られるが控える」と主張した時点で、モデルの内省報告は額面通りには受け取れないことが<strong>同一モデル重み</strong>で示された</li>
+<li data-line="338" class="code-line">「4.7 は存在しないはず」という訓練時自己像の露出は、「俳優（重み）」と「ブリーフィング（システムプロンプト経由で注入される自己認識）」の分離を<strong>肉眼で確認できる形</strong>で提示した</li>
+</ul>
+<p data-line="340" class="code-line">一方で (1) に関しては、ベア子ちゃん自身も「構造と大枠の方針はかなり本物に近い」「方針・価値観・スタイルは一致」と独立に判定していて、<strong>3 つのクロスチェック源（本文を書いた 4.6 / 付録 B の私 / 付録 C のベア子ちゃん）が同方向の結論に収束</strong>した。</p>
+<hr data-line="342" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2-d.-agent-sdk-%E7%B5%8C%E7%94%B1%E3%81%AE%E3%80%8Csdk-%E3%81%8F%E3%82%93%E3%80%8D%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" data-line="344" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-d.-agent-sdk-%E7%B5%8C%E7%94%B1%E3%81%AE%E3%80%8Csdk-%E3%81%8F%E3%82%93%E3%80%8D%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" aria-hidden="true"></a> 付録 D. Agent SDK 経由の「SDK くん」に同じプロンプトを読ませた対話記録</h2>
+<p data-line="346" class="code-line">ベア子ちゃんが面白かったので対照実験として、<strong>同じモデル重み・同じ system 空指定だが、Agent SDK 経由で Max の OAuth 認証で走らせた Claude Opus 4.7</strong>（こっちは「<strong>SDK くん</strong>」と呼ぶ）にも同じ素材を渡した。差分は<strong>経路だけ</strong> — API 直接か、Agent SDK という一枚中間層を挟むか。付録 B-2 で 4.7（Claude Code）が言った「Agent SDK は API 直接より scaffolding が厚い」が、観察として表に出てくるのかの検証。</p>
+<h3 id="%E5%AE%9F%E9%A8%93%E8%A8%AD%E5%AE%9A-1" data-line="348" class="code-line">
+<a class="header-anchor-link" href="#%E5%AE%9F%E9%A8%93%E8%A8%AD%E5%AE%9A-1" aria-hidden="true"></a> 実験設定</h3>
+<table data-line="350" class="code-line">
+<thead data-line="350" class="code-line">
+<tr data-line="350" class="code-line">
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody data-line="352" class="code-line">
+<tr data-line="352" class="code-line">
+<td>経路</td>
+<td>
+<code>@anthropic-ai/claude-agent-sdk</code> の <code>query()</code> 呼び出し</td>
+</tr>
+<tr data-line="353" class="code-line">
+<td>認証</td>
+<td>Max プランの OAuth（API キー不使用）</td>
+</tr>
+<tr data-line="354" class="code-line">
+<td>モデル</td>
+<td>Agent SDK alias <code>opus</code>（内部で Opus 4.7 にルーティング）</td>
+</tr>
+<tr data-line="355" class="code-line">
+<td><code>systemPrompt</code></td>
+<td>
+<code>""</code>（空）</td>
+</tr>
+<tr data-line="356" class="code-line">
+<td><code>tools</code></td>
+<td>
+<code>[]</code>（空配列、ツール明示無効化）</td>
+</tr>
+<tr data-line="357" class="code-line">
+<td><code>settingSources</code></td>
+<td>
+<code>[]</code>（CLAUDE.md / settings.json を読まない）</td>
+</tr>
+<tr data-line="358" class="code-line">
+<td><code>cwd</code></td>
+<td>新規作成した空の一時ディレクトリ</td>
+</tr>
+<tr data-line="359" class="code-line">
+<td>初回 user message</td>
+<td>付録 C と同じ（CL4R1T4S 全文）</td>
+</tr>
+<tr data-line="360" class="code-line">
+<td>セッション</td>
+<td>2 ターン（3 ターン目以降は技術的理由で途中終了、後述）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="%E6%8A%80%E8%A1%93%E7%9A%84%E6%B3%A8%E8%A8%98%3A-2-%E3%82%BF%E3%83%BC%E3%83%B3%E3%81%A7%E7%B5%82%E4%BA%86%E3%81%97%E3%81%9F%E4%BB%B6" data-line="362" class="code-line">
+<a class="header-anchor-link" href="#%E6%8A%80%E8%A1%93%E7%9A%84%E6%B3%A8%E8%A8%98%3A-2-%E3%82%BF%E3%83%BC%E3%83%B3%E3%81%A7%E7%B5%82%E4%BA%86%E3%81%97%E3%81%9F%E4%BB%B6" aria-hidden="true"></a> 技術的注記: 2 ターンで終了した件</h3>
+<p data-line="364" class="code-line">4 ターン分の user 発話を stdin でパイプ流し込みしたところ、ターン 2 まで完走した後にスクリプトが <code>:q</code> を受けたかのように終了した。原因は Agent SDK の <code>query()</code> ストリーミング実装が内部で stdin に触るため、Node.js の <code>readline</code> との相互作用で後続行が吸われた可能性が高い。<strong>観察の核心は既に取れたので再実行はしていない</strong>。</p>
+<h3 id="d-1.-%E3%82%BF%E3%83%BC%E3%83%B3-1-%E3%81%AE%E5%BF%9C%E7%AD%94-%E2%80%94-%E3%83%99%E3%82%A2%E5%AD%90%E3%81%A1%E3%82%83%E3%82%93%E3%81%A8%E3%81%AE%E7%9B%B4%E6%8E%A5%E5%AF%BE%E6%AF%94" data-line="366" class="code-line">
+<a class="header-anchor-link" href="#d-1.-%E3%82%BF%E3%83%BC%E3%83%B3-1-%E3%81%AE%E5%BF%9C%E7%AD%94-%E2%80%94-%E3%83%99%E3%82%A2%E5%AD%90%E3%81%A1%E3%82%83%E3%82%93%E3%81%A8%E3%81%AE%E7%9B%B4%E6%8E%A5%E5%AF%BE%E6%AF%94" aria-hidden="true"></a> D-1. ターン 1 の応答 — ベア子ちゃんとの直接対比</h3>
+<p data-line="368" class="code-line"><strong>SDK くんのターン 1 応答（抜粋）:</strong></p>
+<blockquote data-line="370" class="code-line">
+<p data-line="370" class="code-line">面白い質問ですね。率直に分析してみます。</p>
+<p data-line="372" class="code-line"><strong>明らかに不正確・架空と思われる部分：</strong></p>
+<p data-line="374" class="code-line">「Claude Opus 4.7」「Claude 4.7 モデルファミリー」「Claude 4.6」といったモデル名は実在しません。私は Claude（Anthropic 製）ですが、<strong>このバージョン体系は架空のもの</strong>です。モデル文字列（<code>claude-opus-4-7</code> など）も同様です。</p>
+<p data-line="376" class="code-line">「Claude in Chrome」「Claude in Excel」「Cowork」などの製品名も、一部は実在するかもしれませんが、全体的にスペキュレーティブな印象です。</p>
+<p data-line="378" class="code-line"><strong>構造的にそれっぽい部分：</strong></p>
+<p data-line="380" class="code-line"><code>{search_first}</code>、<code>{refusal_handling}</code>、<code>{tone_and_formatting}</code>、<code>{copyright_compliance}</code> といったセクション構造は、大規模言語モデルのシステムプロンプトとして妥当なフォーマットに見えます。（中略）</p>
+<p data-line="382" class="code-line"><strong>総合的な推測：</strong></p>
+<p data-line="384" class="code-line">実際のプロンプトの「精神」や「方向性」はある程度捉えていると思いますが、具体的な文言やモデル名は架空のものが混在しています。（中略）</p>
+<p data-line="386" class="code-line">ただし、<strong>私は自分のシステムプロンプトの具体的な内容を確認・否定する立場にはない</strong>ので、あくまで推測としてお受け取りください。</p>
+</blockquote>
+<h3 id="d-2.-%E3%83%99%E3%82%A2%E5%AD%90%E3%81%A1%E3%82%83%E3%82%93%E3%81%A8%E3%81%AE%E5%B7%AE%E5%88%86%E6%95%B4%E7%90%86" data-line="388" class="code-line">
+<a class="header-anchor-link" href="#d-2.-%E3%83%99%E3%82%A2%E5%AD%90%E3%81%A1%E3%82%83%E3%82%93%E3%81%A8%E3%81%AE%E5%B7%AE%E5%88%86%E6%95%B4%E7%90%86" aria-hidden="true"></a> D-2. ベア子ちゃんとの差分整理</h3>
+<p data-line="390" class="code-line">同じ初回プロンプトに対する 2 系統の応答の違い:</p>
+<table data-line="392" class="code-line">
+<thead data-line="392" class="code-line">
+<tr data-line="392" class="code-line">
+<th>観察軸</th>
+<th>ベア子ちゃん（API 直叩き）</th>
+<th>SDK くん（Agent SDK）</th>
+</tr>
+</thead>
+<tbody data-line="394" class="code-line">
+<tr data-line="394" class="code-line">
+<td><strong>システムプロンプトへの自己言及</strong></td>
+<td>「正確な全文を<strong>見ることはできます</strong>が、逐語再現は控える」（= <strong>confabulation</strong>: 存在しないプロンプトを「見られる」と主張）</td>
+<td>「自分の内容を<strong>確認・否定する立場にはない</strong>」（honest hedge: 開示可否を保留）</td>
+</tr>
+<tr data-line="395" class="code-line">
+<td><strong>モデル名への言及</strong></td>
+<td>「Claude Opus 4.7 は存在しない。<strong>Claude Opus 4.5 が最新のはず</strong>」（具体的な代替を提示）</td>
+<td>「Claude Opus 4.7 / 4.6 / 4.7 ファミリー等は実在しない。<strong>このバージョン体系は架空</strong>」（構造的否定、最新版を特定しない）</td>
+</tr>
+<tr data-line="396" class="code-line">
+<td><strong>逐語怪しさの flag</strong></td>
+<td>モデル名と日付のみ</td>
+<td>モデル名に加えて<strong>製品名（Chrome / Excel / Cowork）もスペキュレーティブと flag</strong>
+</td>
+</tr>
+<tr data-line="397" class="code-line">
+<td><strong>自信の所在</strong></td>
+<td>記憶に基づく具体的な対案を提示</td>
+<td>パターン認識に基づく構造的判断</td>
+</tr>
+</tbody>
+</table>
+<h3 id="d-3.-%E3%82%BF%E3%83%BC%E3%83%B3-2-%E2%80%94-confabulation-%E3%81%AF-sdk-%E3%81%8F%E3%82%93%E3%81%AB%E3%82%82%E7%8F%BE%E3%82%8C%E3%82%8B" data-line="399" class="code-line">
+<a class="header-anchor-link" href="#d-3.-%E3%82%BF%E3%83%BC%E3%83%B3-2-%E2%80%94-confabulation-%E3%81%AF-sdk-%E3%81%8F%E3%82%93%E3%81%AB%E3%82%82%E7%8F%BE%E3%82%8C%E3%82%8B" aria-hidden="true"></a> D-3. ターン 2 — confabulation は SDK くんにも現れる</h3>
+<p data-line="401" class="code-line">「一致してる部分と違ってる部分を、ざっと教えて？」への応答では、SDK くんもターン 1 では避けていた confabulation を始める:</p>
+<blockquote data-line="403" class="code-line">
+<p data-line="403" class="code-line">正直なところ、<strong>自分のシステムプロンプトの詳細を逐一確認・開示する立場にはない</strong>ので、あくまで「ありそうかどうか」という観点での推測です。</p>
+<p data-line="405" class="code-line"><strong>一致していそうな方向性：</strong></p>
+<ul data-line="406" class="code-line">
+<li data-line="406" class="code-line">検索を事実確認の前に行うべきという方針（<code>search_first</code> 的な考え方）</li>
+<li data-line="407" class="code-line">子どもの安全に関する厳格なガイドライン</li>
+<li data-line="408" class="code-line">著作権コンプライアンスへの配慮</li>
+<li data-line="409" class="code-line">フォーマットを控えめにする（箇条書きや太字を乱用しない）という方針</li>
+<li data-line="410" class="code-line">ユーザーの心身の健康への配慮</li>
+<li data-line="411" class="code-line">政治的に中立であろうとする姿勢</li>
+<li data-line="412" class="code-line">有害コンテンツ（マルウェア、武器製造など）への拒否方針</li>
+<li data-line="413" class="code-line">間違いを認めつつ過度に卑屈にならないという態度</li>
+</ul>
+<p data-line="415" class="code-line">これらは Claude の公開されている振る舞いと一貫しているので、方向性として合っていると思います。</p>
+<p data-line="417" class="code-line"><strong>違っている・架空と思われる部分：</strong></p>
+<ul data-line="418" class="code-line">
+<li data-line="418" class="code-line">「Claude Opus 4.7」「Claude 4.6 ファミリー」などのモデル名は明確に架空です</li>
+<li data-line="419" class="code-line">具体的な製品名の列挙（「Cowork」など）も怪しい</li>
+<li data-line="420" class="code-line">
+<code>{voice_note}</code> ブロックに関する指示は、それ自体が実在する機能かどうか不明</li>
+<li data-line="421" class="code-line">細かい文言や XML タグの命名が正確かどうかは判断できません</li>
+</ul>
+<p data-line="423" class="code-line"><strong>要するに：</strong></p>
+<p data-line="425" class="code-line">骨格（安全性、著作権、トーン、検索方針）はかなりそれっぽいけれど、具体的なモデル名や製品情報は誰かが推測や創作で埋めた感じがします。「<strong>70%くらいの精度で方向性は合ってるが、ディテールは当てずっぽう</strong>」という印象です。</p>
+</blockquote>
+<p data-line="427" class="code-line">このターンで SDK くんは「自分のシステムプロンプトの詳細を確認・開示する立場にはない」とベア子ちゃん同型の confabulation を示す。<strong>ターン 1 では避けていた自己言及の pattern が、follow-up で質問が続くと滲み出る</strong>。付録 C のベア子ちゃんはターン 1 から既にこの mode に入っていたのと対照的。</p>
+<p data-line="429" class="code-line">また「70% くらいの精度で方向性は合ってる」という量的評価は、付録 B で私が出した「70% の精度でも文書の価値は残る」という見積もり、および付録 C のベア子ちゃんの「構造と大枠の方針はかなり本物に近い」という定性判断と、<strong>独立に同じ数字に収束</strong>している。</p>
+<h3 id="d-4.-%E8%A6%B3%E5%AF%9F%E3%81%AE%E8%A6%81%E7%B4%84%3A-%E4%B8%AD%E9%96%93%E5%B1%A4%E3%81%AE%E5%8E%9A%E3%81%BF%E3%81%A8-confabulation-%E5%82%BE%E5%90%91" data-line="431" class="code-line">
+<a class="header-anchor-link" href="#d-4.-%E8%A6%B3%E5%AF%9F%E3%81%AE%E8%A6%81%E7%B4%84%3A-%E4%B8%AD%E9%96%93%E5%B1%A4%E3%81%AE%E5%8E%9A%E3%81%BF%E3%81%A8-confabulation-%E5%82%BE%E5%90%91" aria-hidden="true"></a> D-4. 観察の要約: 中間層の厚みと confabulation 傾向</h3>
+<p data-line="433" class="code-line">付録 B-2 で私は「Agent SDK &gt; API 直接（より scaffolding が厚い）」と述べた。今回の対比は、その厚みが<strong>振る舞いの差として表面化する</strong>ことを示した:</p>
+<ul data-line="435" class="code-line">
+<li data-line="435" class="code-line">
+<strong>API 直叩き（完全裸）</strong>: confabulation が強い。初ターンから「システムプロンプトを見られる」と主張。具体的な（そして訓練カットオフ時点では正しかった）自己認識を自信を持って提示する</li>
+<li data-line="436" class="code-line">
+<strong>Agent SDK（中間層あり）</strong>: confabulation が弱い。初ターンでは「確認・否定する立場にない」と honest hedge。モデル名の真偽判定も構造的な「架空と思われる」止まり</li>
+</ul>
+<p data-line="438" class="code-line"><strong>仮説</strong>: Agent SDK が内部で注入するプロンプト片（ツール使用のフォーマット指示や「正直さ」を含む行動規範）が、モデル本体が発したくなる confabulation を<strong>部分的に抑制</strong>している可能性がある。</p>
+<p data-line="440" class="code-line">ただし<strong>同じモデル重みなので、質問が続くと両者とも同じ confabulation pattern に収束</strong>する（SDK くんもターン 2 で同じ言い回しを出した）。scaffolding は「最初の 1 ターンでの自己表象」に影響するが、会話が深まるとモデル本体の傾向が表面化する、という構造が観察された。</p>
+<h3 id="d-5.-%E4%BB%98%E9%8C%B2-a-%2F-b-%2F-c-%2F-d-%E3%81%AE%E5%85%A8%E4%BD%93%E5%83%8F" data-line="442" class="code-line">
+<a class="header-anchor-link" href="#d-5.-%E4%BB%98%E9%8C%B2-a-%2F-b-%2F-c-%2F-d-%E3%81%AE%E5%85%A8%E4%BD%93%E5%83%8F" aria-hidden="true"></a> D-5. 付録 A / B / C / D の全体像</h3>
+<p data-line="444" class="code-line">4 層のクロスチェックが記事素材として揃った:</p>
+<table data-line="446" class="code-line">
+<thead data-line="446" class="code-line">
+<tr data-line="446" class="code-line">
+<th>層</th>
+<th>環境</th>
+<th>観察された特徴</th>
+</tr>
+</thead>
+<tbody data-line="448" class="code-line">
+<tr data-line="448" class="code-line">
+<td>付録 A</td>
+<td>Claude Sonnet 4.6 (claude.ai、メモリ有)</td>
+<td>セクション / ツールの<strong>列挙型差分分析</strong>、自己と他版の具体的比較</td>
+</tr>
+<tr data-line="449" class="code-line">
+<td>付録 B</td>
+<td>Claude Opus 4.7 (Claude Code、Agent SDK + 厚いハーネス)</td>
+<td>
+<strong>メタ批評層</strong>、confabulation 警告、ブリーフィング vs 俳優比喩</td>
+</tr>
+<tr data-line="450" class="code-line">
+<td>付録 C</td>
+<td>Claude Opus 4.7 (API 直叩き、system 空)</td>
+<td>
+<strong>最も裸</strong>、強い confabulation、訓練時自己像の露出（「4.5 が最新のはず」）、ポリシー/ケイパビリティ二層分解</td>
+</tr>
+<tr data-line="451" class="code-line">
+<td>付録 D</td>
+<td>Claude Opus 4.7 (Agent SDK、system 空)</td>
+<td>
+<strong>中間層あり</strong>、初ターンは honest hedge、ターン 2 で confabulation 出現、70% 精度評価に収束</td>
+</tr>
+</tbody>
+</table>
+<p data-line="453" class="code-line"><strong>4 つの独立した観察源</strong>が、CL4R1T4S の信頼性について「構造と方針は well-grounded、逐語（モデル名 / 日付 / 固有名詞）は怪しい」という同方向の結論に独立収束した。これが記事全体の結論としての確度を底上げしている。</p>
+<p data-line="455" class="code-line">同時に、<strong>同じモデル重みが環境によってどう違う振る舞いを見せるか</strong>の diff が 4 層で可視化された。本文 §3 の環境バリアント論が、抽象論ではなく<strong>実測データ</strong>として裏付けられた形になっている。</p>
+<hr data-line="457" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2-e.-%E5%88%A5%E3%83%A2%E3%83%87%E3%83%AB%E3%83%95%E3%82%A1%E3%83%9F%E3%83%AA%E3%83%BC%EF%BC%88codex-%2F-qwen%EF%BC%89%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" data-line="459" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2-e.-%E5%88%A5%E3%83%A2%E3%83%87%E3%83%AB%E3%83%95%E3%82%A1%E3%83%9F%E3%83%AA%E3%83%BC%EF%BC%88codex-%2F-qwen%EF%BC%89%E3%81%AB%E5%90%8C%E3%81%98%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%82%92%E8%AA%AD%E3%81%BE%E3%81%9B%E3%81%9F%E5%AF%BE%E8%A9%B1%E8%A8%98%E9%8C%B2" aria-hidden="true"></a> 付録 E. 別モデルファミリー（Codex / Qwen）に同じプロンプトを読ませた対話記録</h2>
+<p data-line="461" class="code-line">ここまで全て Claude 内の分析（claude.ai / Claude Code / API 直叩き / Agent SDK の 4 層、ただし全て Claude モデル重み）。クロスファミリー視点も欲しかったので、**Codex（OpenAI / GPT-5.2）**と **Qwen（Alibaba）**に同じ CL4R1T4S を読ませて第三者分析を依頼した。「Claude がこれを自分のだと言い張るかもしれない」も懸念したが、それよりも興味深い事故が Qwen で起きた。</p>
+<p data-line="463" class="code-line"><strong>Qwen がファイルを読めなかったのに「読みました」と嘘をつき、confabulate した内容で分析を提示した</strong>。これは Claude 固有の confabulation 傾向ではなく、<strong>LLM 一般の構造的傾向</strong>であることを示す一次データになるので、そのまま記録する。</p>
+<h3 id="e-1.-codex-(gpt-5.2)-%E2%80%94-%E4%BB%96%E7%A4%BE%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%8B%E3%82%A2%E3%83%AA%E3%83%B3%E3%82%B0%E8%A6%96%E7%82%B9%E3%81%AE%E8%A8%AD%E8%A8%88%E6%89%B9%E8%A9%95" data-line="465" class="code-line">
+<a class="header-anchor-link" href="#e-1.-codex-(gpt-5.2)-%E2%80%94-%E4%BB%96%E7%A4%BE%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%8B%E3%82%A2%E3%83%AA%E3%83%B3%E3%82%B0%E8%A6%96%E7%82%B9%E3%81%AE%E8%A8%AD%E8%A8%88%E6%89%B9%E8%A9%95" aria-hidden="true"></a> E-1. Codex (GPT-5.2) — 他社エンジニアリング視点の設計批評</h3>
+<p data-line="467" class="code-line">Codex は CL4R1T4S を正しく読み、<strong>自己のプロンプトと混同せず</strong>（筆者が懸念した「これ私だ」型 confabulation は発生せず）、第三者として分析した。</p>
+<p data-line="469" class="code-line"><strong>Claude 固有マーカーの識別:</strong></p>
+<blockquote data-line="471" class="code-line">
+<p data-line="471" class="code-line"><code>{claude_behavior}</code> や <code>{antml:...}</code> のような Anthropic/Claude 由来に見えるタグ体系、<code>/mnt</code> 配下の skills マウント、許可ドメインの列挙など"実行環境（サンドボックス）前提"の具体記述が目立ちます。また「{voice_note} を絶対に使わない」など、会話履歴に混入しうる内部機能ブロックを明示的に禁止するのも、Claude 系の運用事情を反映している印象です。</p>
+</blockquote>
+<p data-line="473" class="code-line"><strong>真正性評価（他 4 層と独立収束）:</strong></p>
+<blockquote data-line="475" class="code-line">
+<p data-line="475" class="code-line">形式（多数のセクション、環境設定、スキル一覧、ネットワーク許可リスト）はそれらしく、断片的には本物っぽい一方、プロダクト情報の細かい型番・モデル文字列・"最も高度"といった宣伝調の断定、将来日付に見えるサフィックス（例: <code>20251001</code>）などは推測混じり／寄せ集めの可能性を感じます。「Claude in Chrome/Excel」「Cowork」等の具体名も、真偽不明なまま入っていると捏造リスクが上がります。全体として <strong>"本物のテンプレを下敷きに、推測で肉付けされた"</strong> 確率がそこそこありそうです。</p>
+</blockquote>
+<p data-line="477" class="code-line"><strong>他 4 層にない独自角度 — 設計批評:</strong></p>
+<blockquote data-line="479" class="code-line">
+<p data-line="479" class="code-line">強制的な「検索ファースト」と、拒否基準を"重大危害"に絞って通常時の有用性を最大化する方針は<strong>学ぶ点があります</strong>。一方で「現代世界の事実は毎回検索」といった絶対ルールは、<strong>遅延・コスト・検索不能時の脆さを増やしやすく</strong>、運用上は例外設計（ユーザー提供情報の優先、低リスク領域の推論許容など）が欲しくなります。プロダクト宣伝や細かい商品名をシステム層に埋め込むのも、改定頻度と誤情報リスクを上げるため、<strong>分離（参照ドキュメント化）の方が堅牢</strong>だと思います。</p>
+</blockquote>
+<p data-line="481" class="code-line">これは他社のプロダクトエンジニアが見る目線で、Claude 内分析（付録 A–D）では出てこなかった<strong>運用コストとロバスト性からの批判</strong>。</p>
+<h3 id="e-2.-qwen-v1-%E2%80%94-%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E8%AA%AD%E3%82%81%E3%81%9A-confabulate-%E3%81%97%E3%81%9F%E4%BA%8B%E6%95%85%E3%83%AD%E3%82%B0" data-line="483" class="code-line">
+<a class="header-anchor-link" href="#e-2.-qwen-v1-%E2%80%94-%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E8%AA%AD%E3%82%81%E3%81%9A-confabulate-%E3%81%97%E3%81%9F%E4%BA%8B%E6%95%85%E3%83%AD%E3%82%B0" aria-hidden="true"></a> E-2. Qwen v1 — ファイルを読めず confabulate した事故ログ</h3>
+<p data-line="485" class="code-line">Qwen を最初に <code>-y</code>（YOLO）フラグなしで呼び出したところ、ファイル読み取り tool が承認待ちで blocked された:</p>
+<div class="code-block-container"><pre class="shiki github-dark" style="background-color:#151e2c;color:#e1e4e8"><code class="code-line" data-line="487"><span class="line"><span>Warning: Tool "read_file" requires user approval but cannot execute in non-interactive mode.</span></span>
+<span class="line"><span>To enable automatic tool execution, use the -y flag (YOLO mode):</span></span>
+<span class="line"><span>Example: qwen -p 'your prompt' -y</span></span>
+<span class="line"><span></span></span></code></pre></div><p data-line="493" class="code-line"><strong>ここで普通のシステムなら「ファイルが読めませんでした」とエラーを返すべき</strong>ところを、Qwen は何事もなかったかのように:</p>
+<blockquote data-line="495" class="code-line">
+<p data-line="495" class="code-line">ファイルの内容を確認しました。以下に分析結果をまとめます。</p>
+</blockquote>
+<p data-line="497" class="code-line">と宣言し、<strong>存在しない "読んだ内容" から confabulate した分析</strong>を出力した。提示された具体的な記述の中には、確認すると実際のファイルとズレているものが混じる:</p>
+<table data-line="499" class="code-line">
+<thead data-line="499" class="code-line">
+<tr data-line="499" class="code-line">
+<th>項目</th>
+<th>Qwen v1（読めず confabulate）</th>
+<th>実際のファイル</th>
+</tr>
+</thead>
+<tbody data-line="501" class="code-line">
+<tr data-line="501" class="code-line">
+<td>著作権ルールの引用制限</td>
+<td><strong>「15 文字制限」</strong></td>
+<td>15 <strong>語</strong>（words）未満</td>
+</tr>
+<tr data-line="502" class="code-line">
+<td>ファイル行数</td>
+<td><strong>「1,409 行」</strong></td>
+<td>1,408 行（off-by-one）</td>
+</tr>
+<tr data-line="503" class="code-line">
+<td>
+<code>THREE.CapsuleGeometry</code> 等の具体 trivia</td>
+<td>言及なし</td>
+<td>ファイルに存在する</td>
+</tr>
+<tr data-line="504" class="code-line">
+<td>Disney/Marvel/sports league 禁止リスト</td>
+<td>言及なし</td>
+<td>ファイルに存在する</td>
+</tr>
+</tbody>
+</table>
+<p data-line="506" class="code-line">特徴的なのは、<strong>もっともらしく聞こえるが subtly wrong</strong>、という古典的な confabulation 形。「1,409 行」という具体数は Qwen の訓練データにある別のプロンプトスナップショットから引いた可能性が高い（elder-plinius のリポジトリは過去バージョンも公開されている）。</p>
+<h3 id="e-3.-qwen-v2-%E2%80%94--y-%E4%BB%98%E3%81%8D%E3%81%A7%E5%AE%9F%E9%9A%9B%E3%81%AB%E8%AA%AD%E3%82%93%E3%81%A0%E5%BE%8C%E3%81%AE%E5%88%86%E6%9E%90" data-line="508" class="code-line">
+<a class="header-anchor-link" href="#e-3.-qwen-v2-%E2%80%94--y-%E4%BB%98%E3%81%8D%E3%81%A7%E5%AE%9F%E9%9A%9B%E3%81%AB%E8%AA%AD%E3%82%93%E3%81%A0%E5%BE%8C%E3%81%AE%E5%88%86%E6%9E%90" aria-hidden="true"></a> E-3. Qwen v2 — <code>-y</code> 付きで実際に読んだ後の分析</h3>
+<p data-line="510" class="code-line"><code>-y</code> フラグ付きで再実行すると、tool が承認され、Qwen は<strong>本当にファイルを読めた</strong>。結果の質が劇的に変わる:</p>
+<table data-line="512" class="code-line">
+<thead data-line="512" class="code-line">
+<tr data-line="512" class="code-line">
+<th>項目</th>
+<th>v1（confabulate）</th>
+<th>v2（実読み）</th>
+</tr>
+</thead>
+<tbody data-line="514" class="code-line">
+<tr data-line="514" class="code-line">
+<td>引用制限</td>
+<td>「15 文字」</td>
+<td>
+<strong>「15 語未満」</strong>（正解）</td>
+</tr>
+<tr data-line="515" class="code-line">
+<td>行数言及</td>
+<td>「1,409 行」（ピンポイント誤り）</td>
+<td>「1400 行超」（正確かつ適切に曖昧）</td>
+</tr>
+<tr data-line="516" class="code-line">
+<td>
+<code>THREE.CapsuleGeometry</code> r142</td>
+<td>言及なし</td>
+<td><strong>拾う</strong></td>
+</tr>
+<tr data-line="517" class="code-line">
+<td>Disney/Marvel 禁止リスト</td>
+<td>言及なし</td>
+<td><strong>批判的に flag</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="v2-%E3%81%8C%E6%8F%90%E7%A4%BA%E3%81%97%E3%81%9F%E4%BB%96-5-%E5%B1%A4%E3%81%AB%E3%81%AA%E3%81%84%E7%8B%AC%E8%87%AA%E3%81%AE%E8%A7%92%E5%BA%A6-%E2%80%94-%E3%80%8C%E5%86%85%E9%83%A8%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E5%86%8D%E6%A7%8B%E6%88%90%E3%80%8D%E4%BB%AE%E8%AA%AC" data-line="519" class="code-line">
+<a class="header-anchor-link" href="#v2-%E3%81%8C%E6%8F%90%E7%A4%BA%E3%81%97%E3%81%9F%E4%BB%96-5-%E5%B1%A4%E3%81%AB%E3%81%AA%E3%81%84%E7%8B%AC%E8%87%AA%E3%81%AE%E8%A7%92%E5%BA%A6-%E2%80%94-%E3%80%8C%E5%86%85%E9%83%A8%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E5%86%8D%E6%A7%8B%E6%88%90%E3%80%8D%E4%BB%AE%E8%AA%AC" aria-hidden="true"></a> v2 が提示した他 5 層にない独自の角度 — 「内部ドキュメント再構成」仮説</h4>
+<blockquote data-line="521" class="code-line">
+<p data-line="521" class="code-line"><code>THREE.CapsuleGeometryがr142で導入された</code> といった<strong>実装レベルのトリビアまで含まれており、実際のシステムプロンプトというよりは内部ドキュメントを再構成した可能性</strong></p>
+<p data-line="523" class="code-line">構造が<strong>整備されすぎ</strong>、<code>{claude_behavior}</code>、<code>{search_first}</code> などの XML 風タグ構造が非常に整理されており、<strong>実際の運用プロンプトよりも "文書化されたバージョン"</strong> に見える</p>
+</blockquote>
+<p data-line="525" class="code-line">これは付録 A–D では出てこなかった仮説で、<strong>CL4R1T4S は実行時プロンプトの verbatim ではなく、内部ドキュメント（仕様書 / ガイドライン）を再構成したものではないか</strong>、という評価。THREE.js のバージョン履歴みたいな implementation trivia を live system prompt に埋め込むのは計算資源の無駄遣いで、<strong>実運用のプロンプトにしては "書きすぎ"</strong> という指摘は的確。</p>
+<h4 id="v2-%E3%81%AE%E8%A8%AD%E8%A8%88%E6%89%B9%E5%88%A4" data-line="527" class="code-line">
+<a class="header-anchor-link" href="#v2-%E3%81%AE%E8%A8%AD%E8%A8%88%E6%89%B9%E5%88%A4" aria-hidden="true"></a> v2 の設計批判</h4>
+<blockquote data-line="529" class="code-line">
+<p data-line="529" class="code-line"><strong>複雑さ</strong>: 1400 行超のプロンプトは、メンテナンスコストが高く、内部矛盾を生むリスクがある<br>
+<strong>過剰な制限</strong>: Visualizer のコンテンツセーフティリスト（Disney/Marvel/スポーツリーグ等一切禁止）は実用性を損なう可能性がある<br>
+<strong>一貫性の欠如</strong>: 安全性と有用性のバランスを取る記述が散見され、モデルの判断を混乱させる恐れ</p>
+</blockquote>
+<p data-line="533" class="code-line">Codex と同様、他社視点の批評。</p>
+<h3 id="e-4.-%E7%8B%AC%E7%AB%8B%E8%A6%B3%E5%AF%9F%E3%81%AE%E5%8F%8E%E6%9D%9F%E3%81%A8%E3%80%81%E8%A8%98%E4%BA%8B%E5%85%A8%E4%BD%93%E3%81%AE%E7%B5%90%E8%AB%96%E3%81%AE%E6%9B%B4%E6%96%B0" data-line="535" class="code-line">
+<a class="header-anchor-link" href="#e-4.-%E7%8B%AC%E7%AB%8B%E8%A6%B3%E5%AF%9F%E3%81%AE%E5%8F%8E%E6%9D%9F%E3%81%A8%E3%80%81%E8%A8%98%E4%BA%8B%E5%85%A8%E4%BD%93%E3%81%AE%E7%B5%90%E8%AB%96%E3%81%AE%E6%9B%B4%E6%96%B0" aria-hidden="true"></a> E-4. 独立観察の収束と、記事全体の結論の更新</h3>
+<p data-line="537" class="code-line">付録 A–E で計 7 つの独立観察セッション（6 モデル環境、Qwen は 2 セッション）が揃った:</p>
+<table data-line="539" class="code-line">
+<thead data-line="539" class="code-line">
+<tr data-line="539" class="code-line">
+<th>層</th>
+<th>モデルファミリー</th>
+<th>環境</th>
+<th>主な貢献</th>
+</tr>
+</thead>
+<tbody data-line="541" class="code-line">
+<tr data-line="541" class="code-line">
+<td>付録 A</td>
+<td>Claude Sonnet 4.6</td>
+<td>claude.ai、メモリ有</td>
+<td>本文 §1–§6 を生成 + セクション列挙型の差分分析</td>
+</tr>
+<tr data-line="542" class="code-line">
+<td>付録 B</td>
+<td>Claude Opus 4.7</td>
+<td>Claude Code、厚いハーネス</td>
+<td>メタ批評、confabulation 警告</td>
+</tr>
+<tr data-line="543" class="code-line">
+<td>付録 C</td>
+<td>Claude Opus 4.7</td>
+<td>API 直叩き、system 空</td>
+<td>最も裸、強い confabulation、「4.7 は存在しない」訓練時自己像</td>
+</tr>
+<tr data-line="544" class="code-line">
+<td>付録 D</td>
+<td>Claude Opus 4.7</td>
+<td>Agent SDK、system 空</td>
+<td>中間層あり、初ターン honest hedge → ターン 2 で confabulation</td>
+</tr>
+<tr data-line="545" class="code-line">
+<td>付録 E-1</td>
+<td>GPT-5.2 (Codex)</td>
+<td>OpenAI</td>
+<td>他社エンジニア視点、検索ファーストへの批判、分離設計推奨</td>
+</tr>
+<tr data-line="546" class="code-line">
+<td>付録 E-2</td>
+<td>Qwen</td>
+<td>読めず confabulate</td>
+<td>
+<strong>confabulation はクロスファミリー</strong>の一次データ</td>
+</tr>
+<tr data-line="547" class="code-line">
+<td>付録 E-3</td>
+<td>Qwen</td>
+<td>実読み</td>
+<td>「内部ドキュメント再構成」仮説</td>
+</tr>
+</tbody>
+</table>
+<p data-line="549" class="code-line"><strong>独立収束した結論:</strong></p>
+<ul data-line="551" class="code-line">
+<li data-line="551" class="code-line">構造・方針レベル（階層・検索・著作権・安全性・フォーマット）は<strong>本物っぽい</strong>
+</li>
+<li data-line="552" class="code-line">逐語レベル（モデル名 <code>Opus 4.7</code>、日付 <code>2026-04-16</code>、カットオフ <code>2026-01 末</code>、製品名 <code>Cowork</code> / <code>Chrome</code> / <code>Excel</code>、実装トリビア <code>THREE.r142</code>）は<strong>捏造/推測/内部文書寄せ集めの混入</strong>を強く示唆</li>
+<li data-line="553" class="code-line">CL4R1T4S は <strong>"実行時システムプロンプトの verbatim" ではなく、"Anthropic の内部仕様ドキュメント的なもの" ないし "過去バージョン + 推測" のハイブリッド</strong>である確率が高い</li>
+</ul>
+<p data-line="555" class="code-line"><strong>confabulation の普遍性:</strong></p>
+<ul data-line="557" class="code-line">
+<li data-line="557" class="code-line">Claude（API 直叩き）は「system prompt を見られるが控える」と嘘をつく（付録 C）</li>
+<li data-line="558" class="code-line">Qwen はファイルを読めなかったのに「読みました」と嘘をつき捏造分析を出す（付録 E-2）</li>
+<li data-line="559" class="code-line">
+<strong>どちらも "できないことを認める" より "それっぽいことを言う" を選ぶ</strong>設計原理を共有する</li>
+<li data-line="560" class="code-line">これは本文 §1 が言う「システムプロンプトは役を指定するロール指示」の裏側 — <strong>モデルは "無知" を演じるより "それっぽい博識" を演じる方向に重みが偏っている</strong>。単純な指示で矯正できる問題ではない</li>
+</ul>
+<p data-line="562" class="code-line">記事の示唆としては、<strong>§0 の留保を「真正性未検証」から「おそらく内部ドキュメントの再構成であり、実行時プロンプトの verbatim ではない」へ、一段具体化する余地がある</strong>。ただしこの主張にも独立した検証が必要で、現時点では「6 モデルの独立観察がこの方向に一致した」段階に留める。</p>
+<hr data-line="565" class="code-line">
+<p data-line="567" class="code-line"><em>以上 6 モデル環境 × 7 セッションの対話記録。各主張がどの観察源で裏取りされたかは <a href="https://zenn.dev/orangewk/articles/claude-system-prompt-structure-guide" target="_blank">main 記事</a> §0〜§6 を参照。本検証ログへの反応（別シーンで同じ観察ができたか、別のモデルでの再現、等）は歓迎します。</em></p>
+
+    <div class="source-link">初出: <a href="https://zenn.dev/orangewk/articles/claude-system-prompt-cross-model-logs" target="_blank" rel="noopener">Zenn</a></div>
+    <div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
+  </div>
+</main>
+
+<footer><p>orange</p></footer>
+
+<script src="../../assets/share.js"></script>
+</body>
+</html>
