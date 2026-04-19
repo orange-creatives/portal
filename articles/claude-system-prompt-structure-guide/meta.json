@@ -1,0 +1,13 @@
+{
+  "title": "流出? ClaudeOpus4.7のSystemプロンプト、本人や他LLMに見せてみた — 構造分析 + 付き合い方",
+  "description": "TL;DR CL4R1T4S に投稿された「Claude Opus 4.7 のシステムプロンプト」を、4.6 / 裸の 4.7 / Agent SDK 4.7 / Codex / Qwen の 6 モデル環境で対照実験した 構造・方針レベル（階層・検索ファースト・著作権ルール・フォーマット規定）は本...",
+  "date": "2026-04-19",
+  "tags": [
+    "AI",
+    "llm"
+  ],
+  "cover": "assets/ogp.jpg",
+  "platform": "Zenn",
+  "source_url": "https://zenn.dev/orangewk/articles/claude-system-prompt-structure-guide",
+  "section": "recent"
+}

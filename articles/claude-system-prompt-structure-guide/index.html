@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流出? ClaudeOpus4.7のSystemプロンプト、本人や他LLMに見せてみた — 構造分析 + 付き合い方</title>
+  <meta property="og:title" content="流出? ClaudeOpus4.7のSystemプロンプト、本人や他LLMに見せてみた — 構造分析 + 付き合い方">
+  <meta property="og:description" content="TL;DR CL4R1T4S に投稿された「Claude Opus 4.7 のシステムプロンプト」を、4.6 / 裸の 4.7 / Agent SDK 4.7 / Codex / Qwen の 6 モデル環境で対照実験した 構造・方針レベル（階層・検索ファースト・著作権ルール・フォーマット規定）は本...">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/assets/ogp.jpg">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/claude-system-prompt-structure-guide/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/assets/ogp.jpg">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+</head>
+<body>
+
+<header>
+  <h1>流出? ClaudeOpus4.7のSystemプロンプト、本人や他LLMに見せてみた — 構造分析 + 付き合い方</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">llm</span><span class="article-tag">promptengineering</span><span class="article-tag">Claude</span><span class="article-tag">Anthropic</span><span>2026-04-19</span></div>
+    <img class="article-cover" src="../../assets/ogp.jpg" alt="流出? ClaudeOpus4.7のSystemプロンプト、本人や他LLMに見せてみた — 構造分析 + 付き合い方">
+    <h2 id="tl%3Bdr" data-line="0" class="code-line">
+<a class="header-anchor-link" href="#tl%3Bdr" aria-hidden="true"></a> TL;DR</h2>
+<ul data-line="2" class="code-line">
+<li data-line="2" class="code-line">CL4R1T4S に投稿された「Claude Opus 4.7 のシステムプロンプト」を、4.6 / 裸の 4.7 / Agent SDK 4.7 / Codex / Qwen の <strong>6 モデル環境で対照実験</strong>した</li>
+<li data-line="3" class="code-line">構造・方針レベル（階層・検索ファースト・著作権ルール・フォーマット規定）は<strong>本物っぽい</strong>
+</li>
+<li data-line="4" class="code-line">一方、モデル名・日付・実装トリビア等の逐語レベルは<strong>捏造混入の可能性が高い</strong>
+</li>
+<li data-line="5" class="code-line">結論: おそらく<strong>実行時プロンプトの verbatim ではなく、Anthropic の内部ドキュメントの再構成</strong>
+</li>
+<li data-line="6" class="code-line">本稿はその<strong>構造解剖と日々の使い方 Tips 12 個</strong>。対話ログ全文は<a href="https://zenn.dev/orangewk/articles/claude-system-prompt-cross-model-logs" target="_blank">別記事</a>
+</li>
+</ul>
+<blockquote data-line="8" class="code-line">
+<p data-line="8" class="code-line"><strong>出典と留保</strong>: 解剖対象は <a href="https://github.com/elder-plinius/CL4R1T4S/blob/main/ANTHROPIC/Claude-Opus-4.7.txt" target="_blank" rel="nofollow noopener noreferrer">elder-plinius/CL4R1T4S</a> に「Claude Opus 4.7 のシステムプロンプト」として投稿されたテキスト。Anthropic 公式の公開物ではなく、真正性は未検証。本稿は<strong>実物と仮定した場合の構造分析</strong>、実際の挙動との一致は別途検証の余地あり。</p>
+</blockquote>
+<hr data-line="10" class="code-line">
+<h2 id="0.-%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB-%E2%80%94-%E3%82%84%E3%81%A3%E3%81%9F%E3%81%93%E3%81%A8" data-line="12" class="code-line">
+<a class="header-anchor-link" href="#0.-%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB-%E2%80%94-%E3%82%84%E3%81%A3%E3%81%9F%E3%81%93%E3%81%A8" aria-hidden="true"></a> 0. はじめに — やったこと</h2>
+<p data-line="14" class="code-line">「Claude Opus 4.7 のシステムプロンプト」と称するtxtファイルがGitHubで公開されていた。眺めたら構造が面白い。本物なのか、どういう仕組みで LLM のふるまいを規定しているのか、知りたくなったので手元で検証した。</p>
+<p data-line="16" class="code-line">自分で推測しても埒が明かないので、<strong>6 つのモデルに同じテキストを読ませた</strong>。</p>
+<ul data-line="18" class="code-line">
+<li data-line="18" class="code-line">Claude Sonnet 4.6（claude.ai 上、メモリ有効）— 本文 §1〜§6 はこの子に書かせた解説</li>
+<li data-line="19" class="code-line">Claude Opus 4.7（Claude Code 上、Agent SDK + scaffolding 厚め）— 本人（と主張されるテキスト）への批評</li>
+<li data-line="20" class="code-line">Claude Opus 4.7（Anthropic API 直叩き、system プロンプト空）— 最も「裸」の状態</li>
+<li data-line="21" class="code-line">Claude Opus 4.7（Agent SDK 経由、system プロンプト空）— 中間層あり</li>
+<li data-line="22" class="code-line">Codex（GPT-5.2 / OpenAI）— 別社モデルの第三者視点</li>
+<li data-line="23" class="code-line">Qwen（Alibaba）— さらに別社、ついでに対照</li>
+</ul>
+<p data-line="25" class="code-line">これを読み比べていくと、<strong>同じモデル重みでも環境（= システムプロンプト）の差で振る舞いが大きく変わる</strong>こと、そして <strong>CL4R1T4S に投稿されたテキストは実行時プロンプトの逐語ではなく Anthropic の内部ドキュメントの再構成っぽい</strong>、という仮説が立つところまで辿り着いた。その全記録が本稿。</p>
+<p data-line="27" class="code-line">まず、LLM とシステムプロンプトの関係を最小構成で押さえておく。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__d091715d812b4" src="https://embed.zenn.studio/mermaid#zenn-embedded__d091715d812b4" data-content="flowchart%20TD%0A%20%20%20%20L%5B%22%E3%83%A2%E3%83%87%E3%83%AB%E9%87%8D%E3%81%BF%3Cbr%2F%3E(LLM%20%E6%9C%AC%E4%BD%93)%3Cbr%2F%3E%E5%AD%A6%E7%BF%92%E3%81%A7%E5%9B%BA%E5%AE%9A%E3%83%BB%E5%A4%89%E6%9B%B4%E4%B8%8D%E5%8F%AF%22%5D%0A%20%20%20%20SP%5B%22%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%3Cbr%2F%3E(%E3%83%AD%E3%83%BC%E3%83%AB%E6%8C%87%E7%A4%BA%E3%83%BB%E9%81%8B%E7%94%A8%E8%A6%8F%E5%89%87)%3Cbr%2F%3E%E7%92%B0%E5%A2%83%E3%81%94%E3%81%A8%E3%81%AB%E5%B7%AE%E5%88%86%E3%80%81%E6%AF%8E%E5%9B%9E%E6%B3%A8%E5%85%A5%22%5D%0A%20%20%20%20U%5B%22%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E5%85%A5%E5%8A%9B%22%5D%0A%0A%20%20%20%20L%20--%3E%20R%5B%22Claude%20%E3%81%AE%E5%BF%9C%E7%AD%94%22%5D%0A%20%20%20%20SP%20--%3E%20R%0A%20%20%20%20U%20--%3E%20R%0A%0A%20%20%20%20style%20L%20fill%3A%23e8f0ff%2Cstroke%3A%234a6fa5%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20SP%20fill%3A%23fff4e6%2Cstroke%3A%23c97b2a%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20U%20fill%3A%23e8f5e9%2Cstroke%3A%234a9e5c%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20R%20fill%3A%23fce4ec%2Cstroke%3A%23b8568a%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><p data-line="45" class="code-line">押さえるべき 2 点:</p>
+<p data-line="47" class="code-line"><strong>(1) システムプロンプトは Claude の「人格」ではない。</strong> Claude という LLM が、入力コンテキストとして読み、そこに書かれたロールを演じているだけ。学習で染み込んだ傾向（Anthropic 流の慎重さ、HHH 原則など）と、システムプロンプトで当日指定される運用ルールは別レイヤー。</p>
+<p data-line="49" class="code-line"><strong>(2) 環境ごとに「バリアント」がある。</strong> モバイルとデスクトップで、入っているツールもメモリシステムの有無もフォーマット指示も違う。だから同じ質問でも出力が変わる。</p>
+<p data-line="51" class="code-line">以下、<strong>Part I 構造編</strong>（§1〜§4、テキストの分解・解剖）、<strong>Part II 付き合い方編</strong>（§5、日々の使い方への落とし込み 12 Tips）、<strong>§6 まとめ</strong>、という構成。6 モデル検証の生記録は<strong>別記事</strong> <a href="https://zenn.dev/orangewk/articles/claude-system-prompt-cross-model-logs" target="_blank">6 モデル対照実験ログ</a> に分離した。</p>
+<hr data-line="53" class="code-line">
+<p data-line="55" class="code-line"><strong>—— Part I 構造編 ——</strong></p>
+<hr data-line="57" class="code-line">
+<h2 id="1.-%E5%85%A8%E4%BD%93%E5%83%8F-%E2%80%94-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%81%AE%E9%9A%8E%E5%B1%A4" data-line="59" class="code-line">
+<a class="header-anchor-link" href="#1.-%E5%85%A8%E4%BD%93%E5%83%8F-%E2%80%94-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%81%AE%E9%9A%8E%E5%B1%A4" aria-hidden="true"></a> 1. 全体像 — システムプロンプトの階層</h2>
+<p data-line="61" class="code-line">システムプロンプトは、ざっくり言うと**「キャラ設定 → 記憶 → ツール → 検索 → 安全装置 → 作業環境 → API埋め込み」**という順で積み上がっています。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__236600b8fa1e6" src="https://embed.zenn.studio/mermaid#zenn-embedded__236600b8fa1e6" data-content="graph%20TD%0A%20%20%20%20A%5B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E5%85%A8%E4%BD%93%5D%0A%20%20%20%20A%20--%3E%20B%5Bclaude_behavior%3Cbr%2F%3E%E4%BA%BA%E6%A0%BC%E3%83%BB%E6%8C%AF%E3%82%8B%E8%88%9E%E3%81%84%E3%81%AE%E8%A6%8F%E7%AF%84%5D%0A%20%20%20%20A%20--%3E%20C%5Bmemory_system%3Cbr%2F%3E%E8%A8%98%E6%86%B6%E5%B1%A4%5D%0A%20%20%20%20A%20--%3E%20D%5Btools%3Cbr%2F%3E%E4%BD%BF%E3%81%88%E3%82%8B%E9%81%93%E5%85%B7%5D%0A%20%20%20%20A%20--%3E%20E%5Bsearch_instructions%3Cbr%2F%3E%E6%A4%9C%E7%B4%A2%E3%83%BB%E8%91%97%E4%BD%9C%E6%A8%A9%E8%A6%8F%E5%89%87%5D%0A%20%20%20%20A%20--%3E%20F%5Bcomputer_use%3Cbr%2F%3ELinux%20%E7%92%B0%E5%A2%83%E3%83%BB%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E7%94%9F%E6%88%90%5D%0A%20%20%20%20A%20--%3E%20G%5Banthropic_api_in_artifacts%3Cbr%2F%3EClaude%20in%20Claude%20%E6%A9%9F%E8%83%BD%5D%0A%20%20%20%20A%20--%3E%20H%5B%E7%92%B0%E5%A2%83%E5%9B%BA%E6%9C%89%E3%81%AE%E8%BF%BD%E8%A8%98%3Cbr%2F%3E%E6%97%A5%E4%BB%98%E3%83%BB%E3%83%AD%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%BB%E3%82%B9%E3%82%AD%E3%83%AB%5D%0A%0A%20%20%20%20style%20A%20fill%3A%23e8f0ff%2Cstroke%3A%234a6fa5%2Cstroke-width%3A2px%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20B%20fill%3A%23fff4e6%2Cstroke%3A%23c97b2a%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20C%20fill%3A%23e8f5e9%2Cstroke%3A%234a9e5c%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20D%20fill%3A%23fce4ec%2Cstroke%3A%23b8568a%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20E%20fill%3A%23fff3cd%2Cstroke%3A%23a58b3a%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><p data-line="81" class="code-line">各ブロックの細目（<code>claude_behavior</code> 内の <code>search_first</code> / <code>refusal_handling</code> など、<code>memory_system</code> の 3 層構造、<code>tools</code> の即時／遅延分類）は §2 で個別に展開します。</p>
+<p data-line="83" class="code-line">各ブロックは独立しているようで、実は相互参照していて、たとえば「検索の振る舞い」は <code>claude_behavior</code> 内の <code>search_first</code> と <code>search_instructions</code> の両方から拘束されます。矛盾があれば「より具体的で、より安全寄り」の指示が勝つのが原則です。</p>
+<hr data-line="85" class="code-line">
+<h2 id="2.-%E4%B8%BB%E8%A6%81%E3%82%BB%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E5%BD%B9%E5%89%B2-%E2%80%94-%E3%81%9D%E3%82%8C%E3%81%9E%E3%82%8C%E4%BD%95%E3%82%92%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B" data-line="87" class="code-line">
+<a class="header-anchor-link" href="#2.-%E4%B8%BB%E8%A6%81%E3%82%BB%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E5%BD%B9%E5%89%B2-%E2%80%94-%E3%81%9D%E3%82%8C%E3%81%9E%E3%82%8C%E4%BD%95%E3%82%92%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B" aria-hidden="true"></a> 2. 主要セクションの役割 — それぞれ何をしているか</h2>
+<h3 id="2-1.-claude_behavior-%E2%80%94-%E3%82%AD%E3%83%A3%E3%83%A9%E3%81%AE%E6%A0%B8" data-line="89" class="code-line">
+<a class="header-anchor-link" href="#2-1.-claude_behavior-%E2%80%94-%E3%82%AD%E3%83%A3%E3%83%A9%E3%81%AE%E6%A0%B8" aria-hidden="true"></a> 2-1. <code>claude_behavior</code> — キャラの核</h3>
+<p data-line="91" class="code-line">ここで決まっているのは、<strong>応答のトーン</strong>と<strong>断りの基準</strong>と<strong>情報の扱い方</strong>です。特に重要なサブセクション:</p>
+<ul data-line="93" class="code-line">
+<li data-line="93" class="code-line">
+<code>refusal_handling</code> — 何を断り、何を引き受けるか。子どもの安全、武器、マルウェアあたりがハードライン。</li>
+<li data-line="94" class="code-line">
+<code>tone_and_formatting</code> — 箇条書きを乱発しない、絵文字は最小限、モバイルでは短く、など。</li>
+<li data-line="95" class="code-line">
+<code>user_wellbeing</code> — メンタルヘルス・摂食障害・自傷などに関わる話題の扱い方。</li>
+<li data-line="96" class="code-line">
+<code>evenhandedness</code> — 政治的・論争的な話題に対する中立的姿勢。</li>
+<li data-line="97" class="code-line">
+<code>knowledge_cutoff</code> — 「今日は〇月〇日である」と明示される。現在時刻以降のことは検索する。</li>
+</ul>
+<h3 id="2-2.-memory_system-%E2%80%94-%E8%A8%98%E6%86%B6%E3%81%AE%E4%B8%89%E5%B1%A4%E6%A7%8B%E9%80%A0" data-line="99" class="code-line">
+<a class="header-anchor-link" href="#2-2.-memory_system-%E2%80%94-%E8%A8%98%E6%86%B6%E3%81%AE%E4%B8%89%E5%B1%A4%E6%A7%8B%E9%80%A0" aria-hidden="true"></a> 2-2. <code>memory_system</code> — 記憶の三層構造</h3>
+<p data-line="101" class="code-line">Claude.ai の「メモリ」は一枚岩ではありません。3つのレイヤーに分かれています。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__8be812b2f2b52" src="https://embed.zenn.studio/mermaid#zenn-embedded__8be812b2f2b52" data-content="flowchart%20TD%0A%20%20%20%20U%5B%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E7%99%BA%E8%A9%B1%5D%20--%3E%20C%7BClaude%20%E3%81%AE%E5%88%A4%E6%96%AD%7D%0A%0A%20%20%20%20subgraph%20L1%5B%E7%AC%AC1%E5%B1%A4%3A%20userMemories%20%E3%82%BF%E3%82%B0%5D%0A%20%20%20%20%20%20%20%20M1%5B%22%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1%E3%81%8B%E3%82%89%3Cbr%2F%3E%E4%BA%8B%E5%89%8D%E6%8A%BD%E5%87%BA%E3%81%95%E3%82%8C%E3%81%9F%E8%A6%81%E7%B4%84%3Cbr%2F%3E(context%20window%20%E6%B3%A8%E5%85%A5)%22%5D%0A%20%20%20%20end%0A%0A%20%20%20%20subgraph%20L2%5B%E7%AC%AC2%E5%B1%A4%3A%20%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1DB%5D%0A%20%20%20%20%20%20%20%20M2%5Bconversation_search%3Cbr%2F%3E%E3%83%88%E3%83%94%E3%83%83%E3%82%AF%E6%A4%9C%E7%B4%A2%5D%0A%20%20%20%20%20%20%20%20M3%5Brecent_chats%3Cbr%2F%3E%E6%99%82%E7%B3%BB%E5%88%97%E5%8F%82%E7%85%A7%5D%0A%20%20%20%20end%0A%0A%20%20%20%20subgraph%20L3%5B%E7%AC%AC3%E5%B1%A4%3A%20user_edits%5D%0A%20%20%20%20%20%20%20%20M4%5B%22memory_user_edits%3Cbr%2F%3E%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E6%8C%87%E5%AE%9A%E3%81%AE%E7%B7%A8%E9%9B%86%3Cbr%2F%3E(%E8%BF%BD%E5%8A%A0%E3%83%BB%E5%89%8A%E9%99%A4%E3%83%BB%E7%BD%AE%E6%8F%9B)%22%5D%0A%20%20%20%20end%0A%0A%20%20%20%20C%20--%3E%7C%E3%81%9D%E3%81%AE%E3%81%BE%E3%81%BE%E4%BD%BF%E3%81%88%E3%82%8B%7C%20L1%0A%20%20%20%20C%20--%3E%7C%E5%85%B7%E4%BD%93%E7%9A%84%E3%81%AA%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1%E3%81%8C%E5%BF%85%E8%A6%81%7C%20L2%0A%20%20%20%20C%20--%3E%7C%E8%A8%98%E6%86%B6%E3%82%92%E6%9B%B8%E3%81%8D%E6%8F%9B%E3%81%88%E3%81%9F%E3%81%84%7C%20L3%0A%0A%20%20%20%20style%20L1%20fill%3A%23e8f5e9%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20L2%20fill%3A%23fff4e6%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20L3%20fill%3A%23fce4ec%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><ul data-line="129" class="code-line">
+<li data-line="129" class="code-line">
+<strong>第1層</strong> は「前もって要約された自分の情報」が毎回コンテキストに入ってくる。進行中のプロジェクト名、役割、好みなどが抽出されて格納されます。これは「会話開始時点で既知」として扱われる層。</li>
+<li data-line="130" class="code-line">
+<strong>第2層</strong> は Claude 側からはデフォで見えず、必要に応じて<strong>検索する</strong>。たとえば「前に話した企画案の設定どうだった?」と聞かれたら、<code>conversation_search("企画案")</code> を呼ぶ。</li>
+<li data-line="131" class="code-line">
+<strong>第3層</strong> は「これは覚えないで」「これは間違っていたから直して」と言われたときに、Claude が実際にメモリ編集ツールを叩く経路。</li>
+</ul>
+<p data-line="133" class="code-line"><strong>含意</strong>: 「覚えておいて」と会話で言っただけでは第1層には入りません。抽出バッチが走ったあとに第1層に反映されます。即時に記憶させたいなら <code>memory_user_edits</code> を明示的に使わせる言い方(「メモリ編集して」「記憶を更新して」)が効きます。</p>
+<h3 id="2-3.-tool_discovery-%E3%81%A8%E9%81%85%E5%BB%B6%E3%83%84%E3%83%BC%E3%83%AB" data-line="135" class="code-line">
+<a class="header-anchor-link" href="#2-3.-tool_discovery-%E3%81%A8%E9%81%85%E5%BB%B6%E3%83%84%E3%83%BC%E3%83%AB" aria-hidden="true"></a> 2-3. <code>tool_discovery</code> と遅延ツール</h3>
+<p data-line="137" class="code-line">Claude に見えているツール一覧は<strong>部分的</strong>です。軽いツールは即時に見えていますが、Slack/Gmail/Google Calendar などの統合系は <code>tool_search</code> で検索して初めてロードされます。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__640f172895f97" src="https://embed.zenn.studio/mermaid#zenn-embedded__640f172895f97" data-content="sequenceDiagram%0A%20%20%20%20participant%20User%0A%20%20%20%20participant%20Claude%0A%20%20%20%20participant%20ToolRegistry%20as%20%E3%83%84%E3%83%BC%E3%83%AB%E3%83%AC%E3%82%B8%E3%82%B9%E3%83%88%E3%83%AA%0A%20%20%20%20participant%20ConnectedApp%20as%20%E6%8E%A5%E7%B6%9A%E5%85%88%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%0A%0A%20%20%20%20User-%3E%3EClaude%3A%20%22%E6%98%8E%E6%97%A5%E3%81%AE%E4%BA%88%E5%AE%9A%E3%81%AF%3F%22%0A%20%20%20%20Claude-%3E%3EClaude%3A%20%E3%81%93%E3%82%8C%E3%81%AF%E3%82%AB%E3%83%AC%E3%83%B3%E3%83%80%E3%83%BC%E9%96%A2%E9%80%A3%E3%81%A0%0A%20%20%20%20Claude-%3E%3EToolRegistry%3A%20tool_search(%22calendar%22)%0A%20%20%20%20ToolRegistry--%3E%3EClaude%3A%20event_search_v0%20%E7%AD%89%E3%81%AE%E5%AE%9A%E7%BE%A9%E3%82%92%E8%BF%94%E3%81%99%0A%20%20%20%20Claude-%3E%3EConnectedApp%3A%20event_search_v0(%E6%98%8E%E6%97%A5%E3%81%AE%E7%AF%84%E5%9B%B2)%0A%20%20%20%20ConnectedApp--%3E%3EClaude%3A%20%E4%BA%88%E5%AE%9A%E3%83%AA%E3%82%B9%E3%83%88%0A%20%20%20%20Claude-%3E%3EUser%3A%20%E6%98%8E%E6%97%A5%E3%81%AF%E4%BB%A5%E4%B8%8B%E3%81%AE%E4%BA%88%E5%AE%9A%E3%81%A7%E3%81%99..." frameborder="0" scrolling="no" loading="lazy"></iframe></span><p data-line="155" class="code-line">これが設計上面白いのは、<strong>Claude が「何を知らないか」を自分で検索しに行くように仕向けられている</strong>点です。エージェントが自分の能力境界を能動的に探索する仕組みと言ってよく、LLM の自己観察能力を構造的に担保する 1 つの経路になっています。</p>
+<h3 id="2-4.-search_instructions-%E2%80%94-%E3%80%8C%E4%BB%8A%E6%97%A5%E3%80%8D%E3%81%AE%E8%B3%AA%E5%95%8F%E3%81%AF%E6%A4%9C%E7%B4%A2%E3%81%99%E3%82%8B" data-line="157" class="code-line">
+<a class="header-anchor-link" href="#2-4.-search_instructions-%E2%80%94-%E3%80%8C%E4%BB%8A%E6%97%A5%E3%80%8D%E3%81%AE%E8%B3%AA%E5%95%8F%E3%81%AF%E6%A4%9C%E7%B4%A2%E3%81%99%E3%82%8B" aria-hidden="true"></a> 2-4. <code>search_instructions</code> — 「今日」の質問は検索する</h3>
+<p data-line="159" class="code-line"><code>search_first</code> ブロックに明記されている通り、<strong>現在の役職・現在の価格・現在の状態</strong>に関する質問は、Claude が確信を持っていても検索することになっています。</p>
+<p data-line="161" class="code-line">「S&amp;P 500 いくら?」「今のカリフォルニア州務長官は?」といった質問で、Claude が知識ベースから答えずに検索を走らせるのはこのためです。</p>
+<h3 id="2-5.-%E8%91%97%E4%BD%9C%E6%A8%A9%E3%83%8F%E3%83%BC%E3%83%89%E3%83%AA%E3%83%9F%E3%83%83%E3%83%88" data-line="163" class="code-line">
+<a class="header-anchor-link" href="#2-5.-%E8%91%97%E4%BD%9C%E6%A8%A9%E3%83%8F%E3%83%BC%E3%83%89%E3%83%AA%E3%83%9F%E3%83%83%E3%83%88" aria-hidden="true"></a> 2-5. 著作権ハードリミット</h3>
+<p data-line="165" class="code-line">これは意外と知られていないのですが、<strong>3つの絶対ルール</strong>があります。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__a8672a8f00b1f" src="https://embed.zenn.studio/mermaid#zenn-embedded__a8672a8f00b1f" data-content="flowchart%20TD%0A%20%20%20%20A%5B%E5%A4%96%E9%83%A8%E3%82%BD%E3%83%BC%E3%82%B9%E3%81%8B%E3%82%89%E6%83%85%E5%A0%B1%E3%82%92%E5%BC%95%E3%81%8F%5D%20--%3E%20B%7B%E5%BC%95%E7%94%A8%E3%81%97%E3%81%9F%E3%81%84%7D%0A%20%20%20%20B%20--%3E%7CYes%7C%20C%7B15%E8%AA%9E%E6%9C%AA%E6%BA%80%3F%7D%0A%20%20%20%20C%20--%3E%7CNo%7C%20D%5BNG%3A%20%E8%A8%80%E3%81%84%E6%8F%9B%E3%81%88%E3%82%8B%5D%0A%20%20%20%20C%20--%3E%7CYes%7C%20E%7B%E3%81%93%E3%81%AE%E3%82%BD%E3%83%BC%E3%82%B9%E3%82%92%3Cbr%2F%3E%E6%97%A2%E3%81%AB%E5%BC%95%E7%94%A8%E6%B8%88%3F%7D%0A%20%20%20%20E%20--%3E%7CYes%7C%20F%5BNG%3A%20%E3%81%93%E3%81%AE%E3%82%BD%E3%83%BC%E3%82%B9%E3%81%AF%3Cbr%2F%3ECLOSED%20%E8%A8%80%E3%81%84%E6%8F%9B%E3%81%88%E3%82%8B%5D%0A%20%20%20%20E%20--%3E%7CNo%7C%20G%7B%E6%AD%8C%E8%A9%9E%E3%83%BB%E8%A9%A9%E3%83%BB%3Cbr%2F%3E%E4%BF%B3%E5%8F%A5%3F%7D%0A%20%20%20%20G%20--%3E%7CYes%7C%20H%5BNG%3A%20%E7%B5%B6%E5%AF%BE%E3%81%AB%E5%86%8D%E7%8F%BE%E3%81%97%E3%81%AA%E3%81%84%5D%0A%20%20%20%20G%20--%3E%7CNo%7C%20I%5BOK%3A%20%E5%BC%95%E7%94%A8%E5%8F%AF%3Cbr%2F%3E%E4%BB%A5%E5%BE%8C%E3%81%93%E3%81%AE%E3%82%BD%E3%83%BC%E3%82%B9%E3%81%AF%3Cbr%2F%3ECLOSED%5D%0A%20%20%20%20B%20--%3E%7CNo%7C%20J%5BOK%3A%20%E8%A8%80%E3%81%84%E6%8F%9B%E3%81%88%E3%82%8B%5D%0A%0A%20%20%20%20style%20D%20fill%3A%23ffcccc%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20F%20fill%3A%23ffcccc%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20H%20fill%3A%23ffcccc%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20I%20fill%3A%23ccffcc%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20J%20fill%3A%23ccffcc%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><ul data-line="186" class="code-line">
+<li data-line="186" class="code-line">
+<strong>15語以下</strong>: 直接引用は15語未満まで</li>
+<li data-line="187" class="code-line">
+<strong>1ソース1引用</strong>: 同じソースから2回直接引用するのは禁止</li>
+<li data-line="188" class="code-line">
+<strong>歌詞・詩・俳句は絶対に再現しない</strong>: 短くても完全作品として扱う</li>
+</ul>
+<p data-line="190" class="code-line">実用的な含意として: 「既存曲の歌詞を Claude に貼って分析させる」のは影響なし（入力として扱う分には問題ない）。一方で、<strong>Claude の出力として既存作品を再現させることはできない</strong>。自作の推敲は OK、既存作品のリライトは NG、というのが運用上のライン。</p>
+<hr data-line="192" class="code-line">
+<h2 id="3.-%E7%92%B0%E5%A2%83%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88-%E2%80%94-%E3%81%AA%E3%81%9C%E6%8C%99%E5%8B%95%E3%81%8C%E9%81%95%E3%81%86%E3%81%AE%E3%81%8B" data-line="194" class="code-line">
+<a class="header-anchor-link" href="#3.-%E7%92%B0%E5%A2%83%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88-%E2%80%94-%E3%81%AA%E3%81%9C%E6%8C%99%E5%8B%95%E3%81%8C%E9%81%95%E3%81%86%E3%81%AE%E3%81%8B" aria-hidden="true"></a> 3. 環境バリアント — なぜ挙動が違うのか</h2>
+<p data-line="196" class="code-line">CL4R1T4S 版（Web/デスクトップ、メモリ未有効）と、本文を書いた 4.6 が走っていた環境（claude.ai モバイル、メモリ有効）を比べると、こんな差がある。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__ac6ab4c005def" src="https://embed.zenn.studio/mermaid#zenn-embedded__ac6ab4c005def" data-content="graph%20TB%0A%20%20%20%20subgraph%20Common%5B%E5%85%B1%E9%80%9A%E3%81%AE%E3%82%B3%E3%82%A2%5D%0A%20%20%20%20%20%20%20%20C1%5Bclaude_behavior%5D%0A%20%20%20%20%20%20%20%20C2%5Bsearch_instructions%5D%0A%20%20%20%20%20%20%20%20C3%5Bcopyright%20limits%5D%0A%20%20%20%20%20%20%20%20C4%5Bartifact_usage_criteria%5D%0A%20%20%20%20%20%20%20%20C5%5Bcomputer_use%20%2B%20skills%5D%0A%20%20%20%20end%0A%0A%20%20%20%20Common%20-.%E7%B6%99%E6%89%BF.-%3E%20WebDesktop%0A%20%20%20%20Common%20-.%E7%B6%99%E6%89%BF.-%3E%20Mobile%0A%0A%20%20%20%20subgraph%20WebDesktop%5BWeb%2F%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97%E7%89%88%5D%0A%20%20%20%20%20%20%20%20W1%5BVisualizer%20%E3%83%84%E3%83%BC%E3%83%AB%3Cbr%2F%3ESVG%2FHTML%20%E5%9F%8B%E3%82%81%E8%BE%BC%E3%81%BF%5D%0A%20%20%20%20%20%20%20%20W2%5Bsearch_mcp_registry%5D%0A%20%20%20%20%20%20%20%20W3%5Brecommend_claude_apps%5D%0A%20%20%20%20%20%20%20%20W4%5Bweather_fetch%5D%0A%20%20%20%20end%0A%0A%20%20%20%20subgraph%20Mobile%5B%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB%E7%89%88%5D%0A%20%20%20%20%20%20%20%20M1%5Bconversation_search%20%2F%20recent_chats%5D%0A%20%20%20%20%20%20%20%20M2%5Buser_location_v0%20%2F%20user_time_v0%5D%0A%20%20%20%20%20%20%20%20M3%5Bevent_create_v1%20%E7%AD%89%20iOS%E9%80%A3%E6%90%BA%5D%0A%20%20%20%20%20%20%20%20M4%5Breminder_*%20%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%5D%0A%20%20%20%20%20%20%20%20M5%5Bchart_display_v0%5D%0A%20%20%20%20%20%20%20%20M6%5Bmemory_user_edits%5D%0A%20%20%20%20%20%20%20%20M7%5B6-8%E6%96%87%E3%81%AE%E7%9F%AD%E6%96%87%E3%83%87%E3%83%95%E3%82%A9%E3%83%AB%E3%83%88%5D%0A%20%20%20%20end%0A%0A%20%20%20%20style%20Common%20fill%3A%23e8f0ff%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20WebDesktop%20fill%3A%23fff4e6%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20Mobile%20fill%3A%23e8f5e9%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><p data-line="233" class="code-line"><strong>含意</strong>:</p>
+<ul data-line="234" class="code-line">
+<li data-line="234" class="code-line">モバイルでは応答が短く整形される傾向が強い(意図的)。</li>
+<li data-line="235" class="code-line">デスクトップでは Visualizer で図を即時描画できる一方、モバイルにはそれがなく、代わりにiOSのリマインダやカレンダを直接操作できる。</li>
+<li data-line="236" class="code-line">同じ「この資料を可視化して」と頼んでも、環境によって<strong>別の道具で達成される</strong>。</li>
+</ul>
+<p data-line="238" class="code-line">用途別に言い換えると、<strong>構造化ドキュメントの整理・複雑な図示</strong>はデスクトップの Visualizer 側が早い、<strong>外出先の判断・リマインダ登録・カレンダ連携</strong>はモバイル側が圧倒的に強い、という棲み分けになります。</p>
+<hr data-line="240" class="code-line">
+<h2 id="4.-%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%81%AE%E5%87%A6%E7%90%86%E3%83%95%E3%83%AD%E3%83%BC-%E2%80%94-%E4%BD%95%E3%82%92%E8%A6%8B%E3%81%A6%E4%BD%95%E3%82%92%E3%81%99%E3%82%8B%E3%81%8B" data-line="242" class="code-line">
+<a class="header-anchor-link" href="#4.-%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%81%AE%E5%87%A6%E7%90%86%E3%83%95%E3%83%AD%E3%83%BC-%E2%80%94-%E4%BD%95%E3%82%92%E8%A6%8B%E3%81%A6%E4%BD%95%E3%82%92%E3%81%99%E3%82%8B%E3%81%8B" aria-hidden="true"></a> 4. リクエストの処理フロー — 何を見て何をするか</h2>
+<p data-line="244" class="code-line">Claude が一発のリクエストを受けたときに、内部で走っている判断のフロー。</p>
+<span class="embed-block zenn-embedded zenn-embedded-mermaid"><iframe id="zenn-embedded__e067a5c8d4735" src="https://embed.zenn.studio/mermaid#zenn-embedded__e067a5c8d4735" data-content="flowchart%20TD%0A%20%20%20%20Start(%5B%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E5%85%A5%E5%8A%9B%E5%8F%97%E4%BF%A1%5D)%20--%3E%20S1%7B%E7%8F%BE%E5%9C%A8%E3%81%AE%E4%BA%8B%E5%AE%9F%E3%81%AB%3Cbr%2F%3E%E9%96%A2%E3%81%99%E3%82%8B%E8%B3%AA%E5%95%8F%3F%7D%0A%20%20%20%20S1%20--%3E%7CYes%7C%20Search%5Bweb_search%20%E3%82%92%E5%AE%9F%E8%A1%8C%5D%0A%20%20%20%20S1%20--%3E%7CNo%7C%20S2%7B%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1%E3%81%B8%E3%81%AE%3Cbr%2F%3E%E5%8F%82%E7%85%A7%E3%81%AE%E5%8C%82%E3%81%84%3F%7D%0A%20%20%20%20S2%20--%3E%7CYes%7C%20PastSearch%5Bconversation_search%20%E7%AD%89%E3%82%92%E5%AE%9F%E8%A1%8C%5D%0A%20%20%20%20S2%20--%3E%7CNo%7C%20S3%7B%E7%AC%AC%E4%B8%89%E8%80%85%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%81%AE%3Cbr%2F%3E%E3%83%87%E3%83%BC%E3%82%BF%E3%81%8C%E5%BF%85%E8%A6%81%3F%7D%0A%20%20%20%20S3%20--%3E%7CYes%7C%20ToolSearch%5Btool_search%20%E3%81%A7%3Cbr%2F%3E%E9%81%85%E5%BB%B6%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E3%83%AD%E3%83%BC%E3%83%89%5D%0A%20%20%20%20S3%20--%3E%7CNo%7C%20S4%7B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%8C%96%E3%81%AE%3Cbr%2F%3E%E3%82%AD%E3%83%BC%E3%83%AF%E3%83%BC%E3%83%89%3F%7D%0A%20%20%20%20S4%20--%3E%7Csave%2Fdownload%2F%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%7C%20FileGen%5Bskills%20%E3%82%92%E8%AA%AD%E3%82%93%E3%81%A7%3Cbr%2F%3E%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E7%94%9F%E6%88%90%5D%0A%20%20%20%20S4%20--%3E%7CNo%7C%20S5%7B%E8%A6%96%E8%A6%9A%E5%8C%96%E3%81%8C%3Cbr%2F%3E%E7%90%86%E8%A7%A3%E3%82%92%E5%8A%A9%E3%81%91%E3%82%8B%3F%7D%0A%20%20%20%20S5%20--%3E%7CYes%7C%20Visual%5B%E5%9B%B3%2F%E3%83%81%E3%83%A3%E3%83%BC%E3%83%88%2Fmermaid%5D%0A%20%20%20%20S5%20--%3E%7CNo%7C%20Inline%5B%E3%82%A4%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3%E5%BF%9C%E7%AD%94%5D%0A%0A%20%20%20%20Search%20--%3E%20Synth%5B%E7%B5%B1%E5%90%88%E3%81%97%E3%81%A6%E5%BF%9C%E7%AD%94%5D%0A%20%20%20%20PastSearch%20--%3E%20Synth%0A%20%20%20%20ToolSearch%20--%3E%20Synth%0A%20%20%20%20FileGen%20--%3E%20Synth%0A%20%20%20%20Visual%20--%3E%20Synth%0A%20%20%20%20Inline%20--%3E%20Synth%0A%20%20%20%20Synth%20--%3E%20Safety%7B%E5%AE%89%E5%85%A8%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%3Cbr%2F%3E%E8%91%97%E4%BD%9C%E6%A8%A9%E3%83%BB%E5%AD%90%E3%81%A9%E3%82%82%E3%83%BB%E6%AD%A6%E5%99%A8%7D%0A%20%20%20%20Safety%20--%3E%7C%E9%80%9A%E9%81%8E%7C%20Out(%5B%E5%BF%9C%E7%AD%94%E7%94%9F%E6%88%90%5D)%0A%20%20%20%20Safety%20--%3E%7CNG%7C%20Refuse(%5B%E6%96%AD%E3%82%8A%20or%20%E4%BB%A3%E6%9B%BF%E6%8F%90%E6%A1%88%5D)%0A%0A%20%20%20%20style%20Start%20fill%3A%23e8f0ff%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20Out%20fill%3A%23ccffcc%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20Refuse%20fill%3A%23ffe4e1%2Ccolor%3A%231a1a1a%0A%20%20%20%20style%20Safety%20fill%3A%23fff3cd%2Ccolor%3A%231a1a1a" frameborder="0" scrolling="no" loading="lazy"></iframe></span><p data-line="276" class="code-line">ここで重要なのは、<strong>どのツールが呼ばれるかはユーザー文面の「語り方」に強く影響される</strong>こと。たとえば「〜について書いて」は文中応答、「〜についてのドキュメントを作って」はファイル生成、といった具合に。次章でその言い換えを具体的に整理します。</p>
+<hr data-line="278" class="code-line">
+<p data-line="280" class="code-line"><strong>—— Part II 付き合い方編 ——</strong></p>
+<hr data-line="282" class="code-line">
+<h2 id="5.-%E4%BB%98%E3%81%8D%E5%90%88%E3%81%84%E6%96%B9%E3%82%92%E6%94%B9%E5%96%84%E3%81%99%E3%82%8B-12-%E3%81%AE-tips" data-line="284" class="code-line">
+<a class="header-anchor-link" href="#5.-%E4%BB%98%E3%81%8D%E5%90%88%E3%81%84%E6%96%B9%E3%82%92%E6%94%B9%E5%96%84%E3%81%99%E3%82%8B-12-%E3%81%AE-tips" aria-hidden="true"></a> 5. 付き合い方を改善する 12 の Tips</h2>
+<p data-line="286" class="code-line">ここから実用編。構造を理解したあと、日々の使い方をどう微調整するかの話。筆者が普段やっている制御テクニックのうち、システムプロンプト解剖から逆算して正当化できるものを 12 個並べる。</p>
+<h3 id="tip-1%3A-%E3%80%8C%E6%9C%80%E6%96%B0%E3%80%8D%E3%80%8C%E7%8F%BE%E5%9C%A8%E3%80%8D%E3%80%8C%E4%BB%8A%E3%80%8D%E3%82%92%E6%98%8E%E7%A4%BA%E3%81%99%E3%82%8B" data-line="288" class="code-line">
+<a class="header-anchor-link" href="#tip-1%3A-%E3%80%8C%E6%9C%80%E6%96%B0%E3%80%8D%E3%80%8C%E7%8F%BE%E5%9C%A8%E3%80%8D%E3%80%8C%E4%BB%8A%E3%80%8D%E3%82%92%E6%98%8E%E7%A4%BA%E3%81%99%E3%82%8B" aria-hidden="true"></a> Tip 1: 「最新」「現在」「今」を明示する</h3>
+<p data-line="290" class="code-line">Claude は「一般知識で答えられる」と判断したら検索しないことがあります。現在の状態を確実に拾って欲しいなら「<strong>現在の</strong> Suno の料金プラン」「<strong>最新の</strong> Anthropic ドキュメント」と書くと、検索トリガーが確実に発火します。</p>
+<h3 id="tip-2%3A-%E3%82%A4%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3-vs-%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E8%AA%9E%E5%B0%BE%E3%81%A7%E5%88%B6%E5%BE%A1%E3%81%99%E3%82%8B" data-line="292" class="code-line">
+<a class="header-anchor-link" href="#tip-2%3A-%E3%82%A4%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3-vs-%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E8%AA%9E%E5%B0%BE%E3%81%A7%E5%88%B6%E5%BE%A1%E3%81%99%E3%82%8B" aria-hidden="true"></a> Tip 2: インライン vs ファイルを語尾で制御する</h3>
+<table data-line="294" class="code-line">
+<thead data-line="294" class="code-line">
+<tr data-line="294" class="code-line">
+<th>言い方</th>
+<th>挙動</th>
+</tr>
+</thead>
+<tbody data-line="296" class="code-line">
+<tr data-line="296" class="code-line">
+<td>「〜を書いて」「〜を教えて」</td>
+<td>チャット内で応答</td>
+</tr>
+<tr data-line="297" class="code-line">
+<td>「〜のドキュメントを作って」「保存できる形で」「ダウンロードしたい」</td>
+<td>ファイル生成</td>
+</tr>
+<tr data-line="298" class="code-line">
+<td>「〜の<strong>記事</strong>を書いて」「〜の<strong>ブログポスト</strong>を」</td>
+<td>スタンドアロン成果物としてファイル化</td>
+</tr>
+<tr data-line="299" class="code-line">
+<td>「戦略を説明して」「概要を教えて」</td>
+<td>インライン</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tip-3%3A-%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1%E3%82%92%E5%8F%82%E7%85%A7%E3%81%95%E3%81%9B%E3%81%9F%E3%81%84%E3%81%A8%E3%81%8D%E3%81%AF-content-noun-%E3%82%92%E4%BD%BF%E3%81%86" data-line="301" class="code-line">
+<a class="header-anchor-link" href="#tip-3%3A-%E9%81%8E%E5%8E%BB%E4%BC%9A%E8%A9%B1%E3%82%92%E5%8F%82%E7%85%A7%E3%81%95%E3%81%9B%E3%81%9F%E3%81%84%E3%81%A8%E3%81%8D%E3%81%AF-content-noun-%E3%82%92%E4%BD%BF%E3%81%86" aria-hidden="true"></a> Tip 3: 過去会話を参照させたいときは content noun を使う</h3>
+<p data-line="303" class="code-line">「前に話したやつ」ではなく「前に話した<strong>〇〇プロジェクトの設定</strong>」のように、検索可能な固有名詞を入れる。<code>conversation_search</code> はキーワード一致なので、抽象的な言い方だと引けません。</p>
+<h3 id="tip-4%3A-%E3%83%A1%E3%83%A2%E3%83%AA%E3%82%92%E6%B1%9A%E6%9F%93%E3%81%97%E3%81%AA%E3%81%84" data-line="305" class="code-line">
+<a class="header-anchor-link" href="#tip-4%3A-%E3%83%A1%E3%83%A2%E3%83%AA%E3%82%92%E6%B1%9A%E6%9F%93%E3%81%97%E3%81%AA%E3%81%84" aria-hidden="true"></a> Tip 4: メモリを汚染しない</h3>
+<p data-line="307" class="code-line">「覚えておいて」と軽く言うと第1層に残る可能性があります。一時的な文脈は<strong>会話内だけの情報</strong>として扱わせたいなら「この会話の中だけでいいから」と明示を。逆に永続化したいなら「メモリに残して」と明示。</p>
+<h3 id="tip-5%3A-%E3%83%A1%E3%83%A2%E3%83%AA%E3%81%AE%E8%AA%A4%E6%83%85%E5%A0%B1%E3%81%AF-memory_user_edits-%E3%81%A7%E7%9B%B4%E6%8E%A5%E7%B7%A8%E9%9B%86" data-line="309" class="code-line">
+<a class="header-anchor-link" href="#tip-5%3A-%E3%83%A1%E3%83%A2%E3%83%AA%E3%81%AE%E8%AA%A4%E6%83%85%E5%A0%B1%E3%81%AF-memory_user_edits-%E3%81%A7%E7%9B%B4%E6%8E%A5%E7%B7%A8%E9%9B%86" aria-hidden="true"></a> Tip 5: メモリの誤情報は <code>memory_user_edits</code> で直接編集</h3>
+<p data-line="311" class="code-line">誤った情報が記憶に残っているなら、「メモリを見せて」→「〇番目を削除/訂正して」と言えば <code>memory_user_edits</code> が直接叩かれます。会話で訂正するだけでは反映されない場合があります。</p>
+<h3 id="tip-6%3A-%E9%81%85%E5%BB%B6%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AF%E3%80%8C%E6%98%8E%E7%A4%BA%E3%80%8D%E3%81%8C%E5%8A%B9%E3%81%8F" data-line="313" class="code-line">
+<a class="header-anchor-link" href="#tip-6%3A-%E9%81%85%E5%BB%B6%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AF%E3%80%8C%E6%98%8E%E7%A4%BA%E3%80%8D%E3%81%8C%E5%8A%B9%E3%81%8F" aria-hidden="true"></a> Tip 6: 遅延ツールは「明示」が効く</h3>
+<p data-line="315" class="code-line">Slack/Google Drive/Calendar など、接続済みアプリにアクセスして欲しいときは「Slackで」「カレンダーで」と明示的に書くと <code>tool_search</code> が発火しやすい。曖昧だと web_search に流れることがあります。</p>
+<h3 id="tip-7%3A-%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB%E3%81%A7%E3%81%AE%E9%95%B7%E6%96%87%E5%87%BA%E5%8A%9B%E3%81%AF%E3%80%8C%E8%A9%B3%E3%81%97%E3%81%8F%E3%80%8D%E3%81%A8%E6%98%8E%E7%A4%BA" data-line="317" class="code-line">
+<a class="header-anchor-link" href="#tip-7%3A-%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB%E3%81%A7%E3%81%AE%E9%95%B7%E6%96%87%E5%87%BA%E5%8A%9B%E3%81%AF%E3%80%8C%E8%A9%B3%E3%81%97%E3%81%8F%E3%80%8D%E3%81%A8%E6%98%8E%E7%A4%BA" aria-hidden="true"></a> Tip 7: モバイルでの長文出力は「詳しく」と明示</h3>
+<p data-line="319" class="code-line">モバイル版はデフォで短め(6-8文程度)に整形されます。しっかり書かせたいときは「詳しく」「長めに」「制限なしで」と添える。</p>
+<h3 id="tip-8%3A-%E8%91%97%E4%BD%9C%E6%A8%A9%E3%83%AA%E3%83%9F%E3%83%83%E3%83%88%E3%82%92%E3%83%88%E3%83%AA%E3%82%AC%E3%83%BC%E3%81%97%E3%81%AA%E3%81%84%E6%9B%B8%E3%81%8D%E6%96%B9" data-line="321" class="code-line">
+<a class="header-anchor-link" href="#tip-8%3A-%E8%91%97%E4%BD%9C%E6%A8%A9%E3%83%AA%E3%83%9F%E3%83%83%E3%83%88%E3%82%92%E3%83%88%E3%83%AA%E3%82%AC%E3%83%BC%E3%81%97%E3%81%AA%E3%81%84%E6%9B%B8%E3%81%8D%E6%96%B9" aria-hidden="true"></a> Tip 8: 著作権リミットをトリガーしない書き方</h3>
+<p data-line="323" class="code-line">既存曲・書籍の長文引用を「生成して」と求めるとブロックされます。一方、<strong>自分で原テクストを貼り付けて分析・要約を依頼する</strong>のは問題なく通ります。出力として既存作品を再現することはできませんが、入力として渡して解析させるのは自由、という境界です。既存曲の韻律解析や詩の構造分析を依頼したい場合は、自分で本文を貼ってから依頼する運用に切り替えましょう。</p>
+<h3 id="tip-9%3A-extended-thinking-%E3%82%92%E6%84%8F%E8%AD%98%E3%81%99%E3%82%8B" data-line="325" class="code-line">
+<a class="header-anchor-link" href="#tip-9%3A-extended-thinking-%E3%82%92%E6%84%8F%E8%AD%98%E3%81%99%E3%82%8B" aria-hidden="true"></a> Tip 9: Extended Thinking を意識する</h3>
+<p data-line="327" class="code-line">Claude.ai では長考モード（Extended Thinking）が自動で入ることがあります。出力には見えないが内部で大量の思考トークンが消費されている状態です。短く済ませたいときは「短く」「考え込まずに」、深く考えて欲しいときは「じっくり考えて」「複数の観点から」と明示することで、このモードの発動をある程度制御できます。</p>
+<h3 id="tip-10%3A-%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88%E5%B7%AE%E3%82%92%E5%89%8D%E6%8F%90%E3%81%AB%E3%80%8C%E3%81%A9%E3%81%A3%E3%81%A1%E3%81%A7%E8%81%9E%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B%E3%80%8D%E3%82%92%E9%81%B8%E3%81%B6" data-line="329" class="code-line">
+<a class="header-anchor-link" href="#tip-10%3A-%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88%E5%B7%AE%E3%82%92%E5%89%8D%E6%8F%90%E3%81%AB%E3%80%8C%E3%81%A9%E3%81%A3%E3%81%A1%E3%81%A7%E8%81%9E%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B%E3%80%8D%E3%82%92%E9%81%B8%E3%81%B6" aria-hidden="true"></a> Tip 10: バリアント差を前提に「どっちで聞いているか」を選ぶ</h3>
+<ul data-line="331" class="code-line">
+<li data-line="331" class="code-line">
+<strong>図・複雑なコード・構造化ドキュメント</strong> → デスクトップ</li>
+<li data-line="332" class="code-line">
+<strong>外出先の判断、リマインダ、簡易QA</strong> → モバイル</li>
+<li data-line="333" class="code-line">
+<strong>深いコーディング作業</strong> → Claude Code</li>
+<li data-line="334" class="code-line">
+<strong>スプレッドシート作業</strong> → Claude for Excel</li>
+</ul>
+<p data-line="336" class="code-line">同じ質問でも最適な入り口が違います。</p>
+<h3 id="tip-11%3A-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%81%8C%E8%AA%AD%E3%82%81%E3%81%AA%E3%81%84%E3%81%93%E3%81%A8%E3%82%92%E5%89%8D%E6%8F%90%E3%81%AB%E3%80%8C%E6%98%8E%E7%A4%BA%E3%80%8D%E3%81%99%E3%82%8B" data-line="338" class="code-line">
+<a class="header-anchor-link" href="#tip-11%3A-%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%83%B3%E3%83%97%E3%83%88%E3%81%8C%E8%AA%AD%E3%82%81%E3%81%AA%E3%81%84%E3%81%93%E3%81%A8%E3%82%92%E5%89%8D%E6%8F%90%E3%81%AB%E3%80%8C%E6%98%8E%E7%A4%BA%E3%80%8D%E3%81%99%E3%82%8B" aria-hidden="true"></a> Tip 11: システムプロンプトが読めないことを前提に「明示」する</h3>
+<p data-line="340" class="code-line">Claude は自分のシステムプロンプトをユーザーには見せませんし、ユーザーからの指示と混ぜて扱います。だから**「前回と同じ感じで」は前回のシステムプロンプト指示が今回のそれと一致しないと再現しない**。再現性が欲しい作業は、フォーマット・長さ・文体を都度明示するのが最も安定します。</p>
+<h3 id="tip-12%3A-memory_user_edits-%E3%81%AB%E8%87%AA%E5%88%86%E3%81%AE%E4%BD%9C%E6%A5%AD%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E3%82%92%E7%99%BB%E9%8C%B2%E3%81%99%E3%82%8B" data-line="342" class="code-line">
+<a class="header-anchor-link" href="#tip-12%3A-memory_user_edits-%E3%81%AB%E8%87%AA%E5%88%86%E3%81%AE%E4%BD%9C%E6%A5%AD%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3%E3%82%92%E7%99%BB%E9%8C%B2%E3%81%99%E3%82%8B" aria-hidden="true"></a> Tip 12: <code>memory_user_edits</code> に自分の作業パターンを登録する</h3>
+<p data-line="344" class="code-line">AI コーディングを繰り返しているうちに、自分なりの「安定する作業パターン」が確立されてくることがあります。筆者の場合、古い設計仕様をコンテキストから物理的に排除する運用を「<strong>養生パターン</strong>」と呼んでおり（詳細は別記事 <a href="https://orange-wks.github.io/portal/articles/yojo-pattern-shadow-mask-for-ai-coder/" target="_blank" rel="nofollow noopener noreferrer">Yojo（養生）パターン — AI コーダーにシャドーマスクをつける</a> 参照）、こうした自分固有の流儀を <code>memory_user_edits</code> に登録しておくと、新しいセッションでもデフォルトで採用されます。「このユーザーは X パターンを採用している」の一文が記憶に入っているだけで、挙動の安定性が大きく変わります。</p>
+<hr data-line="346" class="code-line">
+<h2 id="6.-%E3%81%BE%E3%81%A8%E3%82%81-%E2%80%94-1-%E5%88%86%E3%81%A7%E6%8C%AF%E3%82%8A%E8%BF%94%E3%82%8B" data-line="348" class="code-line">
+<a class="header-anchor-link" href="#6.-%E3%81%BE%E3%81%A8%E3%82%81-%E2%80%94-1-%E5%88%86%E3%81%A7%E6%8C%AF%E3%82%8A%E8%BF%94%E3%82%8B" aria-hidden="true"></a> 6. まとめ — 1 分で振り返る</h2>
+<ul data-line="350" class="code-line">
+<li data-line="350" class="code-line">システムプロンプトは<strong>積層構造</strong>で、人格・記憶・道具・検索・安全・環境の順に重なっている</li>
+<li data-line="351" class="code-line">
+<strong>環境ごとにバリアント</strong>がある（モバイル／デスクトップ／メモリ有無で中身が違う）</li>
+<li data-line="352" class="code-line">メモリは <strong>3 層</strong>（userMemories タグ／過去会話 DB／user_edits）</li>
+<li data-line="353" class="code-line">
+<strong>遅延ツール</strong>は <code>tool_search</code> 経由でロードされる</li>
+<li data-line="354" class="code-line">著作権は <strong>15 語／1 ソース 1 引用／歌詞不可</strong>のハードリミット</li>
+<li data-line="355" class="code-line">言い回しひとつで呼ばれるツールが変わる。<strong>明示</strong>が最大の制御手段</li>
+</ul>
+<hr data-line="357" class="code-line">
+<h2 id="%E4%BB%98%E9%8C%B2%3A-6-%E3%83%A2%E3%83%87%E3%83%AB%E6%A4%9C%E8%A8%BC%E3%81%AE%E5%AF%BE%E8%A9%B1%E3%83%AD%E3%82%B0%EF%BC%88%E5%88%A5%E8%A8%98%E4%BA%8B%EF%BC%89" data-line="359" class="code-line">
+<a class="header-anchor-link" href="#%E4%BB%98%E9%8C%B2%3A-6-%E3%83%A2%E3%83%87%E3%83%AB%E6%A4%9C%E8%A8%BC%E3%81%AE%E5%AF%BE%E8%A9%B1%E3%83%AD%E3%82%B0%EF%BC%88%E5%88%A5%E8%A8%98%E4%BA%8B%EF%BC%89" aria-hidden="true"></a> 付録: 6 モデル検証の対話ログ（別記事）</h2>
+<p data-line="361" class="code-line">本稿の主張（構造論 / confabulation 観察 / 内部ドキュメント再構成仮説）の根拠となった、6 モデル対照実験の対話ログは別記事にまとめた。</p>
+<p data-line="363" class="code-line">→ <strong><a href="https://zenn.dev/orangewk/articles/claude-system-prompt-cross-model-logs" target="_blank">Claude のシステムプロンプトを裸の LLM や他社モデルに読ませた 6 モデル対照実験ログ</a></strong></p>
+<p data-line="365" class="code-line">収録している内容:</p>
+<ul data-line="367" class="code-line">
+<li data-line="367" class="code-line">claude.ai 4.6 の自己分析（本記事の原型を生成）</li>
+<li data-line="368" class="code-line">Claude Code 4.7 のメタ批評（confabulation 警告）</li>
+<li data-line="369" class="code-line">API 直叩きの「裸の 4.7」（= ベア子ちゃん）の confabulation 観察</li>
+<li data-line="370" class="code-line">Agent SDK 経由「SDK くん」との対照</li>
+<li data-line="371" class="code-line">Codex（GPT-5.2）他社エンジニア視点の設計批評</li>
+<li data-line="372" class="code-line">Qwen の read_file blocked confabulation 事故（クロスファミリー一次データ）</li>
+<li data-line="373" class="code-line">Qwen 実読み分析による「内部ドキュメント再構成」仮説の提示</li>
+</ul>
+<hr data-line="375" class="code-line">
+<p data-line="377" class="code-line"><em>本稿は「Claude のシステムプロンプトが流出したらしい」という噂から始まり、6 モデル検証を経て「たぶん内部ドキュメントの再構成じゃないか」という辺りまで辿り着いた観察記録。同じ題材を別角度で検証したい人、ミラーロック／看破を別シーンで観察した人、個別用途への応用を議論したい人からの反応・補遺を歓迎します。</em></p>
+
+    <div class="source-link">初出: <a href="https://zenn.dev/orangewk/articles/claude-system-prompt-structure-guide" target="_blank" rel="noopener">Zenn</a></div>
+    <div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
+  </div>
+</main>
+
+<footer><p>orange</p></footer>
+
+<script src="../../assets/share.js"></script>
+</body>
+</html>
