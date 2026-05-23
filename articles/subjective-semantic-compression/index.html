@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主観的意味圧縮仮説</title>
+  <meta property="og:title" content="主観的意味圧縮仮説">
+  <meta property="og:description" content="記憶とはデータ保存ではなく、主体関数による意味圧縮である。">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/subjective-semantic-compression/cover.png">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/subjective-semantic-compression/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/subjective-semantic-compression/cover.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+</head>
+<body>
+
+<header>
+  <h1>主観的意味圧縮仮説</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">データ</span><span class="article-tag">哲学</span><span>2026-05-23</span></div>
+    <img class="article-cover" src="cover.png" alt="主観的意味圧縮仮説">
+
+<h2>0. 問題意識</h2>
+
+<p>一般に「記憶」「要約」「データドリブン」「客観」は、情報を中立的に扱っているように語られる。</p>
+
+<p>しかし実際には、情報はそのまま保存されるのではなく、何を残し何を捨てるかの選択を必ず含む。</p>
+
+<p>この選択関数はしばしば隠蔽され、「客観」という言葉で表現される。</p>
+
+<p>本稿の主張は、次の一文にまとめられる。</p>
+
+<blockquote>
+<p>記憶とはデータ保存ではなく、主体関数による意味圧縮である。</p>
+</blockquote>
+
+<h2>1. 現実とデータは同じではない</h2>
+
+<p>現実を <code>R</code> とする。</p>
+
+<p>観測・測定・ラベル化を <code>M</code> とする。</p>
+
+<p>取得データを <code>D</code> とする。</p>
+
+<p>すると、次のように書ける。</p>
+
+<pre><code>D = M(R)</code></pre>
+
+<p>データは現実そのものではない。</p>
+
+<p>データは現実を、ある観測系・設計思想を通して射影した結果である。</p>
+
+<p>観測系には必ず以下が埋め込まれる。</p>
+
+<ul>
+<li>何を測るか</li>
+<li>何を捨てるか</li>
+<li>どの粒度で見るか</li>
+<li>何を目的にするか</li>
+</ul>
+
+<h2>2. 圧縮には価値関数が必要</h2>
+
+<p>無圧縮なら全て保持できる。</p>
+
+<p>圧縮は必ず：</p>
+
+<blockquote>
+<p>何を残すか</p>
+</blockquote>
+
+<p>を決定しなければならない。</p>
+
+<p>よって：</p>
+
+<pre><code>Compress(Data)</code></pre>
+
+<p>は不完全であり、</p>
+
+<p>実際には：</p>
+
+<pre><code>Compress(Data, V)</code></pre>
+
+<p>である。</p>
+
+<p>ここで <code>V</code> は、主体の価値関数である。</p>
+
+<p>言い換えるなら、何を重要だと感じるかという審美眼でもある。</p>
+
+<p>価値関数には：</p>
+
+<ul>
+<li>生存</li>
+<li>好み</li>
+<li>美</li>
+<li>興味</li>
+<li>目標</li>
+<li>感情</li>
+<li>行動方針</li>
+</ul>
+
+<p>などが含まれる。</p>
+
+<h2>3. 記憶とは主体による意味圧縮である</h2>
+
+<p>記憶は録画ではない。</p>
+
+<p>記憶は、次のように表せる。</p>
+
+<pre><code>Memory = Compress(Data, V)</code></pre>
+
+<p>つまり、記憶とは次のようなものだ。</p>
+
+<blockquote>
+<p>記憶は、主体にとって意味のある差異のみを保存する。</p>
+</blockquote>
+
+<p>同じ100万トークンでも：</p>
+
+<p>主体A：</p>
+
+<blockquote>
+<p>「あの日初めて歌った」</p>
+</blockquote>
+
+<p>主体B：</p>
+
+<blockquote>
+<p>「その日の売上」</p>
+</blockquote>
+
+<p>主体C：</p>
+
+<blockquote>
+<p>「危険だった場所」</p>
+</blockquote>
+
+<p>残るものは異なる。</p>
+
+<h2>4. 意味とは何か</h2>
+
+<p>意味とは：</p>
+
+<blockquote>
+<p>主体にとって保存すべき差異</p>
+</blockquote>
+
+<p>である。</p>
+
+<p>つまり、次のように書ける。</p>
+
+<pre><code>Meaning(x) = Value(x | Subject)</code></pre>
+
+<p>データ量は意味量ではない。</p>
+
+<p>極端には：</p>
+
+<p>100万トークンのログを</p>
+
+<blockquote>
+<p>「全部不要」</p>
+</blockquote>
+
+<p>とラベル付けできるなら、</p>
+
+<p>ゼロ圧縮でも意味損失は発生しない。</p>
+
+<h2>5. 客観の欺瞞性</h2>
+
+<p>客観の問題は主観が存在することではない。</p>
+
+<p>問題は：</p>
+
+<blockquote>
+<p>主観関数が隠れること</p>
+</blockquote>
+
+<p>である。</p>
+
+<p>本来は、次のような形をしている。</p>
+
+<pre><code>y = F(x, S)</code></pre>
+
+<p>ここで <code>S</code> は主体、あるいは主体の状態である。</p>
+
+<p>しかし、しばしば提示されるのは <code>y</code> だけである。</p>
+
+<blockquote>
+<p>「データがそう言っている」</p>
+<p>「客観的にそうである」</p>
+</blockquote>
+
+<p>と表現される。</p>
+
+<p>隠れているもの：</p>
+
+<ul>
+<li>観測方法</li>
+<li>損失関数</li>
+<li>選択基準</li>
+<li>目的関数</li>
+<li>主体状態</li>
+</ul>
+
+<h2>6. 客観の再定義</h2>
+
+<p>では、客観とは何か。</p>
+
+<p>客観とは：</p>
+
+<blockquote>
+<p>主観を消したもの</p>
+</blockquote>
+
+<p>ではない。</p>
+
+<p>むしろ：</p>
+
+<blockquote>
+<p>複数主体の安定した重なり</p>
+</blockquote>
+
+<p>である。</p>
+
+<pre><code>Objective = Stable(Subject_1, Subject_2, ...)</code></pre>
+
+<p>客観は主観の否定ではなく、安定点である。</p>
+
+<h2>7. 美について</h2>
+
+<p>美とは：</p>
+
+<blockquote>
+<p>主体が保存したいと感じる差異</p>
+</blockquote>
+
+<p>である。</p>
+
+<p>あるいは、次のように表せる。</p>
+
+<pre><code>Beauty(x) = Value(x | Subject)</code></pre>
+
+<p>この定義では、</p>
+
+<ul>
+<li>芸術作品</li>
+<li>数学の証明</li>
+<li>生存戦略</li>
+<li>行動選択</li>
+</ul>
+
+<p>は連続的に扱える。</p>
+
+<p>記憶とは：</p>
+
+<blockquote>
+<p>美を保存する圧縮過程</p>
+</blockquote>
+
+<p>とも言える。</p>
+
+<h2>終わりに</h2>
+
+<p>情報圧縮の問題は、</p>
+
+<blockquote>
+<p>どれだけ削るか</p>
+</blockquote>
+
+<p>ではない。</p>
+
+<p>本質は：</p>
+
+<blockquote>
+<p>誰にとって何を残すか</p>
+</blockquote>
+
+<p>である。</p>
+
+<p>そして最も危険なのは、主体が存在することではない。</p>
+
+<blockquote>
+<p>主体が見えなくなること</p>
+</blockquote>
+
+<p>である。</p>
+
+<div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
+  </div>
+</main>
+
+</body>
+</html>
