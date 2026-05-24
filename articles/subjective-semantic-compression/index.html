@@ -12,6 +12,19 @@
   <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/subjective-semantic-compression/cover.png">
   <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="../../assets/article.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ]
+      });
+    });
+  </script>
 </head>
 <body>
 
@@ -49,7 +62,7 @@
 
 <p>すると、次のように書ける。</p>
 
-<pre><code>D = M(R)</code></pre>
+<div class="math-block">$$D = M(R)$$</div>
 
 <p>データは現実そのものではない。</p>
 
@@ -78,13 +91,13 @@
 
 <p>よって：</p>
 
-<pre><code>Compress(Data)</code></pre>
+<div class="math-block">$$\mathrm{Compress}(\mathrm{Data})$$</div>
 
 <p>は不完全であり、</p>
 
 <p>実際には：</p>
 
-<pre><code>Compress(Data, V)</code></pre>
+<div class="math-block">$$\mathrm{Compress}(\mathrm{Data}, V)$$</div>
 
 <p>である。</p>
 
@@ -112,7 +125,7 @@
 
 <p>記憶は、次のように表せる。</p>
 
-<pre><code>Memory = Compress(Data, V)</code></pre>
+<div class="math-block">$$\mathrm{Memory} = \mathrm{Compress}(\mathrm{Data}, V)$$</div>
 
 <p>つまり、記憶とは次のようなものだ。</p>
 
@@ -154,7 +167,7 @@
 
 <p>つまり、次のように書ける。</p>
 
-<pre><code>Meaning(x) = Value(x | Subject)</code></pre>
+<div class="math-block">$$\mathrm{Meaning}(x) = \mathrm{Value}(x \mid \mathrm{Subject})$$</div>
 
 <p>データ量は意味量ではない。</p>
 
@@ -184,7 +197,7 @@
 
 <p>本来は、次のような形をしている。</p>
 
-<pre><code>y = F(x, S)</code></pre>
+<div class="math-block">$$y = F(x, S)$$</div>
 
 <p>ここで <code>S</code> は主体、あるいは主体の状態である。</p>
 
@@ -227,7 +240,7 @@
 
 <p>である。</p>
 
-<pre><code>Objective = Stable(Subject_1, Subject_2, ...)</code></pre>
+<div class="math-block">$$\mathrm{Objective} = \mathrm{Stable}(\mathrm{Subject}_1, \mathrm{Subject}_2, \ldots)$$</div>
 
 <p>客観は主観の否定ではなく、安定点である。</p>
 
@@ -243,7 +256,7 @@
 
 <p>あるいは、次のように表せる。</p>
 
-<pre><code>Beauty(x) = Value(x | Subject)</code></pre>
+<div class="math-block">$$\mathrm{Beauty}(x) = \mathrm{Value}(x \mid \mathrm{Subject})$$</div>
 
 <p>この定義では、</p>
 
