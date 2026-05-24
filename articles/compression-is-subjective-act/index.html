@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>「圧縮」は主観的行為である</title>
+  <meta property="og:title" content="「圧縮」は主観的行為である">
+  <meta property="og:description" content="データ化も要約も中立ではない。抽出関数と圧縮関数に隠れた関数設計者の主観について。">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/compression-is-subjective-act/cover.png">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/compression-is-subjective-act/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/compression-is-subjective-act/cover.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="../../assets/article.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ]
+      });
+    });
+  </script>
+</head>
+<body>
+
+<header>
+  <h1>「圧縮」は主観的行為である</h1>
+</header>
+
+<main>
+  <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
+  <div class="article-body">
+    <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">データ</span><span class="article-tag">哲学</span><span>2026-05-24</span></div>
+    <img class="article-cover" src="cover.png" alt="「圧縮」は主観的行為である">
+
+<p>最初は、既存理論を探すつもりだった。</p>
+
+<p>AIキャラの記憶層に使えそうな圧縮論が、どこかにあるはずだと思っていた。</p>
+
+<p>ChatGPT にこう聞いた。</p>
+
+<pre><code>意味論的、主観整合的テキスト圧縮論って世にある？
+圧縮は合目的性が必要で
+つまり主観が必要で
+この観点だと100万トークンも「ゴミ」とラベルつけたらゼロに圧縮して意味が失われない</code></pre>
+
+<p>この時点では「主観的意味圧縮仮説」という名前はない。</p>
+
+<p>ただ、言いたいことはもうだいたい出ていた。</p>
+
+<p>圧縮とは、何を削っていいか、何を残すかを決める行為である。</p>
+
+<p>そして、その判断は中立ではない。</p>
+
+<h2>近い理論はある</h2>
+
+<p>ChatGPT は、かなり近いものはある、と返した。</p>
+
+<p>ただし「主観」という言葉ではなく、「目的変数」「効用」「タスク」「関連性」という名前で隠れていることが多い、という整理だった。</p>
+
+<p>最も近いものとして出てきたのは Information Bottleneck だった。</p>
+
+<p>元データ <code>X</code> から、目的 <code>Y</code> に必要なものだけを残す。</p>
+
+<div class="math-block">$$\mathrm{Compress}(X, Y)$$</div>
+
+<p>これは近い。</p>
+
+<p>目的が違えば、残すべきものも違う。</p>
+
+<p>今日の天気を知りたいなら、長いログのほとんどは不要かもしれない。</p>
+
+<p>ある事件を調べたいなら、同じログの中の時刻や服装や場所が重要になるかもしれない。</p>
+
+<p>ここまではよい。</p>
+
+<p>でも、そこで引っかかった。</p>
+
+<h2>何を残すかは誰が決めているのか</h2>
+
+<p>圧縮は、結局「何を残すか」を決める行為である。</p>
+
+<p>では、それを誰が決めているのか。</p>
+
+<p>「重要な部分だけ残しました」</p>
+
+<p>「客観的に要約しました」</p>
+
+<p>「データからこう言えます」</p>
+
+<p>そう言われると、中立な処理に見える。</p>
+
+<p>しかし実際には、そこには必ず選択がある。</p>
+
+<p>何を測るか。</p>
+
+<p>何を捨てるか。</p>
+
+<p>どの粒度で見るか。</p>
+
+<p>何をノイズと呼ぶか。</p>
+
+<p>何を意味があるとみなすか。</p>
+
+<p>この選択をしている関数設計者が見えなくなる。</p>
+
+<p>ここが引っかかっていた。</p>
+
+<h2>データは現実そのものではない</h2>
+
+<p>この話は、圧縮以前にデータの時点から始まっている。</p>
+
+<p>現実がそのままデータになるわけではない。</p>
+
+<p>現実を <code>R</code> とする。</p>
+
+<p>観測・測定・ラベル化を <code>M</code> とする。</p>
+
+<p>取得データを <code>D</code> とする。</p>
+
+<p>すると、次のように書ける。</p>
+
+<div class="math-block">$$D = M(R)$$</div>
+
+<p>データは現実そのものではない。</p>
+
+<p>データは、現実をある観測系・設計思想を通して射影した結果である。</p>
+
+<p>つまり、データはすでに抽出関数 <code>M</code> の中にいる。</p>
+
+<p>そして <code>M</code> は誰かが設計している。</p>
+
+<p>この記事では、その抽出関数や圧縮関数を設計する主体を、関数設計者と呼ぶ。</p>
+
+<p>何を測るか。</p>
+
+<p>何を測らないか。</p>
+
+<p>どの単位で数えるか。</p>
+
+<p>どんなラベルを付けるか。</p>
+
+<p>その時点で、関数設計者の主観が入っている。</p>
+
+<h2>圧縮もまた主観を含む</h2>
+
+<p>データ化の時点で主観が入る。</p>
+
+<p>さらに、圧縮の時点でも主観が入る。</p>
+
+<p>無圧縮なら全て保持できる。</p>
+
+<p>しかし圧縮するなら、必ず「何を削ってよいか」を決めなければならない。</p>
+
+<p>JPG は、画像を完全に保存しない。</p>
+
+<p>どの差異は捨ててよく、どの差異は残すべきかを決めている。</p>
+
+<p>そこには「これくらいならいいだろう」という OK ラインがある。</p>
+
+<p>圧縮後にどう見えていれば許容できるかを、設計者が決めている。</p>
+
+<p>コサイン類似度も客観そのものではない。</p>
+
+<p>数値で出るので中立に見えるが、その数値は「何を似ているとみなすか」を決めたベクトル空間の上で計算されている。</p>
+
+<p>どんなデータで埋め込みを作ったか。</p>
+
+<p>何を近いと学習したか。</p>
+
+<p>どの差異を残し、どの差異を潰したか。</p>
+
+<p>そこに関数設計者の判断が入っている。</p>
+
+<p>コサイン類似度が高いとは、客観的に似ているということではなく、設計された空間の中で近いということである。</p>
+
+<p>だから、</p>
+
+<div class="math-block">$$\mathrm{Compress}(\mathrm{Data})$$</div>
+
+<p>という書き方では足りない。</p>
+
+<p>実際には、</p>
+
+<div class="math-block">$$\mathrm{Compress}(\mathrm{Data}, V)$$</div>
+
+<p>である。</p>
+
+<p>ここで <code>V</code> は、価値関数である。</p>
+
+<p>何が大事か。</p>
+
+<p>何が不要か。</p>
+
+<p>何を残したいか。</p>
+
+<p>何を美しいと感じるか。</p>
+
+<p>その判断が、圧縮結果を決める。</p>
+
+<p>関数設計者は、何を削っていいのか、何を残すのかを主観で決めている。</p>
+
+<p>そこを隠したまま「客観的な要約」と呼ぶと、関数設計者が消える。</p>
+
+<h2>「ゴミ」は圧縮演算子である</h2>
+
+<p>最初の言葉に戻る。</p>
+
+<pre><code>100万トークンも「ゴミ」とラベルつけたらゼロに圧縮して意味が失われない</code></pre>
+
+<p>これは雑な言い方だが、かなり大事だった。</p>
+
+<p>「ゴミ」と言える主体がいる。</p>
+
+<p>その主体にとって、保存すべき差異がない。</p>
+
+<p>だからゼロに圧縮できる。</p>
+
+<p>ChatGPT はこれを「超強力な圧縮演算子」と整理した。</p>
+
+<p>人間は日常的にこれをしている。</p>
+
+<p>大量の出来事を「通勤した」とまとめる。</p>
+
+<p>何年もの経験を「平凡だった」とまとめる。</p>
+
+<p>細部が存在しなかったわけではない。</p>
+
+<p>主体にとって保存すべき差異だけが残っている。</p>
+
+<h2>主観はノイズではなく意味生成器である</h2>
+
+<p>このやりとりのあと、ChatGPT は近い理論との距離をまとめた。</p>
+
+<p>名前が挙がったのは、Information Bottleneck、Semantic Compression、Predictive Processing、有界合理性、Rate-Distortion 理論だった。</p>
+
+<p>つまり、私が言っていることの部品は、かなり既存理論の中にある。</p>
+
+<p>圧縮は目的依存である。</p>
+
+<p>記憶は意味構造で圧縮される。</p>
+
+<p>脳は世界をそのまま保存しない。</p>
+
+<p>入力はすぐにチャンク化される。</p>
+
+<p>そういう部品はある。</p>
+
+<p>ただ、それらを「主体が何を残したいか」という一点でつなぐと、少し違う形になる。</p>
+
+<p>ChatGPT は、それをこう言った。</p>
+
+<pre><code>部品は80–90%既存
+結合の仕方がかなり独特</code></pre>
+
+<p>ただ、それらは主観を正面から置くというより、目的・効用・タスク・関連性として扱う。</p>
+
+<p>今回の引っかかりは、そこを主体に戻すことだった。</p>
+
+<p>ChatGPT は、私の言説をこう読んだ。</p>
+
+<blockquote>
+
+<p>あなたの言説は、主観を「ノイズ」から「意味生成器」に昇格している。</p>
+
+</blockquote>
+
+<p>この言い方で、最初から言っていたことの言語化が少し進んだ。</p>
+
+<p>これは、この会話の最初から言っていたことでもある。</p>
+
+<p>主観を消したい、という話ではなかった。</p>
+
+<p>抽出関数や圧縮関数の中にある主観が、見えなくなること。</p>
+
+<p>そこが引っかかっていた。</p>
+
+<h2>仮説ノートへの圧縮</h2>
+
+<p>そのあと、こう頼んだ。</p>
+
+<pre><code>これを簡潔にまとめたドキュメント作ってくれます？</code></pre>
+
+<p>ChatGPT は、探索過程を省いて、核だけを整理した。</p>
+
+<p>そこで残った中心命題がこれだった。</p>
+
+<blockquote>
+
+<p>記憶とはデータ保存ではなく、主体関数による意味圧縮である。</p>
+
+</blockquote>
+
+<p>もう一つの核はこれだった。</p>
+
+<blockquote>
+
+<p>客観の問題は主観が存在することではない。  </p>
+
+<p>問題は、主観関数が隠れること。</p>
+
+</blockquote>
+
+<p>長い探索の中にあった近傍理論、例、式、違和感が削られて、数個の命題だけが残った。</p>
+
+<p>それが「主観的意味圧縮仮説」の草案になった。</p>
+
+<h2>会話そのものが圧縮だった</h2>
+
+<p>あとから見ると、この会話自体が仮説の実演になっていた。</p>
+
+<p>最初には、多くの言葉があった。</p>
+
+<p>既存理論の候補があり、式があり、たとえがあり、会話の揺れがあった。</p>
+
+<p>しかし最後に残ったのは、数個の核だった。</p>
+
+<pre><code>データは現実の射影である</code></pre>
+
+<pre><code>圧縮は価値関数を含む</code></pre>
+
+<pre><code>主観の危険は、存在することではなく、見えなくなること</code></pre>
+
+<p>最初にあったのは、短い違和感だった。</p>
+
+<p>私がそれを投げ、ChatGPT が近い理論を並べ、私は必要な形に圧縮してほしいと頼んだ。</p>
+
+<p>そのやりとりの中で、違和感は少しずつ言葉になった。</p>
+
+<p>最後に残ったのが、「主観的意味圧縮仮説」という短いノートだった。</p>
+
+<div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
+  </div>
+</main>
+
+</body>
+</html>
