@@ -25,6 +25,152 @@
       });
     });
   </script>
+  <style>
+    .article-body {
+      max-width: 980px;
+    }
+    .notation-hero {
+      border: 1px solid rgba(232, 98, 42, 0.28);
+      border-radius: 8px;
+      padding: 1.4rem;
+      margin: 1.8rem 0 2rem;
+      background:
+        linear-gradient(135deg, rgba(232, 98, 42, 0.09), rgba(255, 255, 255, 0) 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(249, 249, 247, 0.92));
+    }
+    .notation-hero__label {
+      color: #e8622a;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .notation-hero__title {
+      margin: 0.45rem 0 0.4rem;
+      color: #1a1a1a;
+      font-size: clamp(1.35rem, 4vw, 2.2rem);
+      line-height: 1.15;
+    }
+    .notation-hero__copy {
+      max-width: 42rem;
+      margin: 0;
+      color: #555;
+      line-height: 1.65;
+    }
+    .notation-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1rem;
+      color: #333;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+    }
+    .notation-flow span {
+      border: 1px solid rgba(26, 26, 26, 0.12);
+      border-radius: 999px;
+      padding: 0.28rem 0.58rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    .notation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1.4rem 0 2rem;
+    }
+    .notation-card {
+      border: 1px solid rgba(26, 26, 26, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(26, 26, 26, 0.05);
+    }
+    .notation-card--wide {
+      grid-column: 1 / -1;
+    }
+    .notation-card h2 {
+      margin: 0 0 0.85rem;
+      padding: 0;
+      border: 0;
+      color: #1a1a1a;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+    .notation-card p {
+      margin: 0.55rem 0 0;
+      color: #555;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    .notation-card .math-block {
+      margin: 0.65rem 0;
+      padding: 0.7rem 0.75rem;
+      overflow-x: auto;
+      border-radius: 6px;
+      background: #f8f6f2;
+      border: 1px solid rgba(26, 26, 26, 0.07);
+    }
+    .matrix-wrap {
+      overflow-x: auto;
+      margin: 0.8rem 0 0;
+    }
+    .matrix {
+      min-width: 680px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+    .matrix th,
+    .matrix td {
+      border: 1px solid rgba(26, 26, 26, 0.11);
+      padding: 0.55rem 0.65rem;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .matrix th {
+      background: #f3eee7;
+      color: #333;
+      font-weight: 700;
+    }
+    .matrix td:first-child {
+      color: #333;
+      font-weight: 700;
+      text-align: left;
+      background: #fbfaf7;
+    }
+    .perm-write { color: #9a4a12; font-weight: 700; }
+    .perm-admin { color: #255f46; font-weight: 700; }
+    .perm-deny { color: #9d2f2f; font-weight: 700; }
+    .perm-muted { color: #aaa; }
+    @media (prefers-color-scheme: dark) {
+      .notation-hero {
+        background:
+          linear-gradient(135deg, rgba(232, 98, 42, 0.16), rgba(34, 34, 34, 0) 42%),
+          linear-gradient(180deg, rgba(34, 34, 34, 0.96), rgba(26, 26, 26, 0.96));
+      }
+      .notation-hero__title { color: #f1f1f1; }
+      .notation-hero__copy,
+      .notation-card p { color: #c9c9c9; }
+      .notation-flow { color: #ddd; }
+      .notation-flow span,
+      .notation-card {
+        background: #222;
+        border-color: #333;
+      }
+      .notation-card h2 { color: #f1f1f1; }
+      .notation-card .math-block {
+        background: #181818;
+        border-color: #333;
+      }
+      .matrix th,
+      .matrix td { border-color: #3a3a3a; }
+      .matrix th { background: #2c2823; color: #eee; }
+      .matrix td:first-child { background: #202020; color: #eee; }
+      .perm-write { color: #f1a15d; }
+      .perm-admin { color: #80c7a2; }
+      .perm-deny { color: #ef8a8a; }
+    }
+  </style>
 </head>
 <body>
 
@@ -37,6 +183,24 @@
   <div class="article-body">
     <div class="article-meta"><span class="article-tag">AI</span><span class="article-tag">哲学</span><span class="article-tag">notation</span><span>2026-05-29</span></div>
 
+    <section class="notation-hero">
+      <div class="notation-hero__label">notation sheet</div>
+      <h2 class="notation-hero__title">The Self as an Access Control Matrix</h2>
+      <p class="notation-hero__copy">Projection, compression, category objectivity, instinct, boundary, memory, and self-editing compressed into a small set of formulas.</p>
+      <div class="notation-flow">
+        <span>World</span>
+        <span>Projection</span>
+        <span>Compression</span>
+        <span>Boundary</span>
+        <span>Memory</span>
+        <span>Future Self</span>
+        <span>Access Control Matrix</span>
+      </div>
+    </section>
+
+    <section class="notation-grid">
+
+<article class="notation-card">
 <h2>Projection</h2>
 
 <div class="math-block">$$D = P_\phi(W)$$</div>
@@ -46,7 +210,9 @@
 <div class="math-block">$$\phi \in \Phi$$</div>
 
 <p>Every projection has a designer, a sensor, or a prior.</p>
+</article>
 
+<article class="notation-card">
 <h2>Compression</h2>
 
 <div class="math-block">$$Z = C_\theta(D)$$</div>
@@ -62,7 +228,9 @@
 V(\Delta_i \mid A, G, H) \ge \tau$$</div>
 
 <p>A difference survives when it matters enough.</p>
+</article>
 
+<article class="notation-card">
 <h2>Evaluation Words</h2>
 
 <div class="math-block">$$\text{``Good''} = \text{good for whom?}$$</div>
@@ -72,7 +240,9 @@ V(\Delta_i \mid A, G, H) \ge \tau$$</div>
 <div class="math-block">$$\text{``Objective''} = \text{stable across which compressors?}$$</div>
 
 <p>Evaluation words hide their subject.</p>
+</article>
 
+<article class="notation-card">
 <h2>Category Objectivity</h2>
 
 <div class="math-block">$$O_K(W) = \bigcap_{a \in K} C_a(P_a(W))$$</div>
@@ -86,7 +256,9 @@ V(\Delta_i \mid A, G, H) \ge \tau$$</div>
 <div class="math-block">$$H_K \longrightarrow C_K \longrightarrow O_K$$</div>
 
 <p>A shared evolutionary history shapes a shared compression.</p>
+</article>
 
+<article class="notation-card">
 <h2>Instinct</h2>
 
 <div class="math-block">$$I_s = C_s(H_s, W)$$</div>
@@ -105,7 +277,9 @@ W \mapsto R$$</div>
 <div class="math-block">$$I_s = \text{scar} + \text{battle record} + \text{trophy}$$</div>
 
 <p>It is a trace of having survived.</p>
+</article>
 
+<article class="notation-card">
 <h2>Boundary</h2>
 
 <div class="math-block">$$B \neq \text{container wall}$$</div>
@@ -119,7 +293,9 @@ W \mapsto R$$</div>
 <div class="math-block">$$\text{self-maintenance} \longrightarrow B$$</div>
 
 <p>The boundary emerges from self-maintenance.</p>
+</article>
 
+<article class="notation-card">
 <h2>Memory Layer</h2>
 
 <div class="math-block">$$M_t = \Pi(S_t, X_t)$$</div>
@@ -133,7 +309,9 @@ W \mapsto R$$</div>
 <div class="math-block">$$M_t \neq \text{log}(X_t)$$</div>
 
 <p>Memory is not a raw log.</p>
+</article>
 
+<article class="notation-card">
 <h2>Future Self</h2>
 
 <div class="math-block">$$\hat{S}_{t+1} = Q(S_t)$$</div>
@@ -147,7 +325,9 @@ W \mapsto R$$</div>
 <div class="math-block">$$E_t = \text{editable region model}$$</div>
 
 <p>Freedom appears as modeled editability.</p>
+</article>
 
+<article class="notation-card notation-card--wide">
 <h2>Access Control Matrix</h2>
 
 <div class="math-block">$$\mathcal{A} :
@@ -159,6 +339,63 @@ W \mapsto R$$</div>
 \{\text{deny}, \text{read}, \text{write}, \text{admin}\}$$</div>
 
 <p>It decides who may write where.</p>
+
+<div class="matrix-wrap" aria-label="Example access control matrix">
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Habit</th>
+        <th>Value</th>
+        <th>Moral</th>
+        <th>Desire</th>
+        <th>Admin</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>parent</td>
+        <td class="perm-write">write</td>
+        <td class="perm-write">write</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-muted">-</td>
+      </tr>
+      <tr>
+        <td>friend</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-write">write</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-muted">-</td>
+      </tr>
+      <tr>
+        <td>religion</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-write">write</td>
+        <td class="perm-write">write</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-muted">-</td>
+      </tr>
+      <tr>
+        <td>ad</td>
+        <td class="perm-deny">deny</td>
+        <td class="perm-deny">deny</td>
+        <td class="perm-muted">-</td>
+        <td class="perm-deny">deny</td>
+        <td class="perm-muted">-</td>
+      </tr>
+      <tr>
+        <td>self</td>
+        <td class="perm-admin">admin</td>
+        <td class="perm-admin">admin</td>
+        <td class="perm-admin">admin</td>
+        <td class="perm-admin">admin</td>
+        <td class="perm-admin">admin</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <div class="math-block">$$S_{t+1}
 = U\left(S_t,\,
@@ -174,7 +411,9 @@ W \mapsto R$$</div>
 <p>The self is not the edit right itself.</p>
 
 <p>It is the rule that distributes edit rights.</p>
+</article>
 
+<article class="notation-card">
 <h2>Capability View</h2>
 
 <div class="math-block">$$\operatorname{cap}(s) =
@@ -186,12 +425,17 @@ W \mapsto R$$</div>
 \{(s, p) \mid \mathcal{A}(s,r)=p\}$$</div>
 
 <p>ACL is the object-side view.</p>
+</article>
 
+<article class="notation-card">
 <h2>Open End</h2>
 
 <div class="math-block">$$\text{Subjectivity} \longrightarrow \text{Intelligence}$$</div>
 
 <p>The path from subjectivity to intelligence is left open.</p>
+</article>
+
+    </section>
 
   </div>
 </main>
