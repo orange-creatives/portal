@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Self as an Access Control Matrix</title>
+  <meta property="og:title" content="The Self as an Access Control Matrix">
+  <meta property="og:description" content="A small notation plate for projection, compression, category objectivity, instinct, boundary, memory, and future self-editing.">
+  <meta property="og:image" content="https://orange-wks.github.io/portal/articles/self-world-boundary/cover.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://orange-wks.github.io/portal/articles/self-world-boundary/">
+  <meta property="og:type" content="article">
+  <meta name="twitter:title" content="The Self as an Access Control Matrix">
+  <meta name="twitter:description" content="A small notation plate for projection, compression, category objectivity, instinct, boundary, memory, and future self-editing.">
+  <meta name="twitter:image" content="https://orange-wks.github.io/portal/articles/self-world-boundary/cover.png">
+  <meta name="twitter:image:alt" content="The Self as an Access Control Matrix notation plate">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ]
+      });
+    });
+  </script>
+  <style>
+    :root {
+      --paper: #f5f0e6;
+      --ink: #1f1d19;
+      --faint: #7c7367;
+      --rule: #cbbda7;
+      --accent: #b95f2b;
+      --wash: #eadfce;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #d9d0c2;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .page {
+      max-width: 980px;
+      margin: 32px auto;
+      padding: 56px 62px 64px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+        var(--paper);
+      border: 1px solid #b9aa94;
+      box-shadow: 0 24px 70px rgba(44, 35, 24, 0.22);
+    }
+    .back {
+      display: inline-block;
+      margin: 0 0 26px;
+      color: var(--faint);
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .back:hover {
+      color: var(--accent);
+    }
+    .plate-number {
+      text-align: center;
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 18px auto 10px;
+      max-width: 760px;
+      text-align: center;
+      font-size: clamp(30px, 5vw, 54px);
+      font-weight: 400;
+      line-height: 1.02;
+      letter-spacing: 0.01em;
+    }
+    .subtitle {
+      max-width: 620px;
+      margin: 0 auto 30px;
+      text-align: center;
+      color: var(--faint);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .rule {
+      height: 1px;
+      margin: 24px 0 30px;
+      background: linear-gradient(90deg, transparent, var(--rule), transparent);
+    }
+    .axioms {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin: 0 auto 34px;
+      max-width: 760px;
+    }
+    .axiom {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .mark {
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      padding-top: 8px;
+      text-transform: uppercase;
+    }
+    .statement {
+      border-left: 1px solid var(--rule);
+      padding-left: 18px;
+    }
+    .statement .math {
+      margin: 0;
+      font-size: 20px;
+    }
+    .statement p {
+      margin: 8px 0 0;
+      color: var(--faint);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .matrix-section {
+      margin: 38px auto;
+      padding: 28px;
+      border: 1px solid var(--rule);
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .matrix-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: baseline;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 10px;
+    }
+    .matrix-title h2 {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+    .matrix-title span {
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th,
+    td {
+      border-bottom: 1px solid rgba(203, 189, 167, 0.82);
+      padding: 11px 10px;
+      text-align: center;
+    }
+    th {
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    td:first-child,
+    th:first-child {
+      text-align: left;
+    }
+    td:first-child {
+      color: var(--ink);
+      font-style: italic;
+    }
+    .write {
+      color: #8b4a20;
+      font-weight: 700;
+    }
+    .deny {
+      color: #8d2f29;
+      font-weight: 700;
+    }
+    .admin {
+      color: #2f6547;
+      font-weight: 700;
+    }
+    .empty {
+      color: #b7aa98;
+    }
+    .caption {
+      margin: 18px 0 0;
+      color: var(--faint);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .closing {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 34px;
+    }
+    .closing-box {
+      border-top: 1px solid var(--rule);
+      padding-top: 16px;
+    }
+    .closing-box .math {
+      font-size: 18px;
+      margin: 0;
+    }
+    .closing-box p {
+      margin: 9px 0 0;
+      color: var(--faint);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .footer-note {
+      margin-top: 42px;
+      text-align: center;
+      color: var(--faint);
+      font-size: clamp(17px, 2.6vw, 24px);
+      line-height: 1.35;
+      letter-spacing: 0.08em;
+    }
+    @media (max-width: 720px) {
+      .page {
+        margin: 0;
+        padding: 36px 22px 42px;
+        border-left: 0;
+        border-right: 0;
+      }
+      .axiom {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      .statement {
+        padding-left: 14px;
+      }
+      .matrix-section {
+        padding: 18px;
+        overflow-x: auto;
+      }
+      table {
+        min-width: 620px;
+      }
+      .closing {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="back" href="../../">&larr; orange-wks</a>
+    <div class="plate-number">Plate I / notes toward a theory of self</div>
+    <h1>The Self as an Access Control Matrix</h1>
+    <p class="subtitle">A small notation sheet for projection, compression, category objectivity, instinct, boundary, memory, and future self-editing.</p>
+
+    <div class="rule"></div>
+
+    <section class="axioms" aria-label="Core notation">
+      <div class="axiom">
+        <div class="mark">I</div>
+        <div class="statement">
+          <div class="math">$$D = P_\phi(W)$$</div>
+          <p>Data is not the world. It is a projection made through a sensor, a prior, or a designer.</p>
+        </div>
+      </div>
+
+      <div class="axiom">
+        <div class="mark">II</div>
+        <div class="statement">
+          <div class="math">$$Z = C_\theta(D)$$</div>
+          <p>Compression preserves selected differences. A difference survives when it matters enough.</p>
+        </div>
+      </div>
+
+      <div class="axiom">
+        <div class="mark">III</div>
+        <div class="statement">
+          <div class="math">$$O_K(W) = \bigcap_{a \in K} C_a(P_a(W))$$</div>
+          <p>Objectivity for a category is what survives across its compressors.</p>
+        </div>
+      </div>
+
+      <div class="axiom">
+        <div class="mark">IV</div>
+        <div class="statement">
+          <div class="math">$$S_{t+1} = F(S_t,\, \Pi_B(X_t))$$</div>
+          <p>A boundary is not merely a wall. It filters what may enter the next state.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="matrix-section" aria-label="Access control matrix">
+      <div class="matrix-title">
+        <h2>Access Control Matrix</h2>
+        <span>who may write where</span>
+      </div>
+
+      <div class="math">$$\mathcal{A} : \text{Source} \times \text{Target} \to \text{Permission}$$</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Habit</th>
+            <th>Value</th>
+            <th>Moral</th>
+            <th>Desire</th>
+            <th>Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>parent</td>
+            <td class="write">write</td>
+            <td class="write">write</td>
+            <td class="empty">-</td>
+            <td class="empty">-</td>
+            <td class="empty">-</td>
+          </tr>
+          <tr>
+            <td>friend</td>
+            <td class="empty">-</td>
+            <td class="write">write</td>
+            <td class="empty">-</td>
+            <td class="empty">-</td>
+            <td class="empty">-</td>
+          </tr>
+          <tr>
+            <td>religion</td>
+            <td class="empty">-</td>
+            <td class="write">write</td>
+            <td class="write">write</td>
+            <td class="empty">-</td>
+            <td class="empty">-</td>
+          </tr>
+          <tr>
+            <td>ad</td>
+            <td class="deny">deny</td>
+            <td class="deny">deny</td>
+            <td class="empty">-</td>
+            <td class="deny">deny</td>
+            <td class="empty">-</td>
+          </tr>
+          <tr>
+            <td>self</td>
+            <td class="admin">admin</td>
+            <td class="admin">admin</td>
+            <td class="admin">admin</td>
+            <td class="admin">admin</td>
+            <td class="admin">admin</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="caption">The self is not the edit right itself. It is the rule that distributes edit rights.</p>
+    </section>
+
+    <section class="closing">
+      <div class="closing-box">
+        <div class="math">$$\operatorname{cap}(s) = \{(r,p) \mid \mathcal{A}(s,r)=p\}$$</div>
+        <p>Capability is the subject-side view.</p>
+      </div>
+      <div class="closing-box">
+        <div class="math">$$\operatorname{acl}(r) = \{(s,p) \mid \mathcal{A}(s,r)=p\}$$</div>
+        <p>ACL is the object-side view.</p>
+      </div>
+    </section>
+
+    <div class="footer-note">Subjectivity &rarr; Intelligence remains open.</div>
+  </main>
+</body>
+</html>
