@@ -1,0 +1,12 @@
+{
+  "tags": [
+    "AI",
+    "データ",
+    "哲学"
+  ],
+  "section": "recent",
+  "title": "圧縮アルゴリズムの中の価値関数",
+  "description": "gzip や JPEG や LLM の圧縮には、何を重く見て何を軽く見るかという V が埋め込まれている。",
+  "cover": "cover.png",
+  "date": "2026-06-17"
+}
