@@ -1,0 +1,12 @@
+{
+  "title": "Attention is Tension -- LLMを、張力を持つ網として眺めると、理解がはかどる",
+  "description": "LLMを「張力を持つ網」として眺めると、意味・文脈・Attention・自己回帰生成が一つの絵にまとまる。対話から生まれた概念モデルを紹介する。",
+  "date": "2026-07-14",
+  "tags": [
+    "LLM",
+    "AI"
+  ],
+  "cover": "assets/ogp.jpg",
+  "section": "recent",
+  "platform": "Zenn"
+}
