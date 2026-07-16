@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>話題の 1-bit LLM「Bonsai 27B」、英語なら評判通り、日本語ではポンコツ…</title>
-  <meta property="og:title" content="話題の 1-bit LLM「Bonsai 27B」、英語なら評判通り、日本語ではポンコツ…">
+  <title>話題の 1-bit LLM「Bonsai 27B」、18 問のベンチでは採用寸前だった — 日本語で測り直すまでは</title>
+  <meta property="og:title" content="話題の 1-bit LLM「Bonsai 27B」、18 問のベンチでは採用寸前だった — 日本語で測り直すまでは">
   <meta property="og:description" content="3.5GB で 27B が動く PrismML が 7/14 に出した Bonsai 27B が話題になっています。Qwen3.6-27B の重みを 1-bit（{-1, +1}）まで削って 3.5GB にしたモデルで、公称は「FP16 比 89.5% のベンチ維持」。 27B がスマホに載る、が売...">
   <meta property="og:image" content="https://orange-wks.github.io/portal/assets/ogp.jpg">
   <meta property="og:url" content="https://orange-wks.github.io/portal/articles/bonsai-27b-1bit-japanese-eval/">
@@ -16,14 +16,14 @@
 <body>
 
 <header>
-  <h1>話題の 1-bit LLM「Bonsai 27B」、英語なら評判通り、日本語ではポンコツ…</h1>
+  <h1>話題の 1-bit LLM「Bonsai 27B」、18 問のベンチでは採用寸前だった — 日本語で測り直すまでは</h1>
 </header>
 
 <main>
   <div class="nav-links"><a href="../../">&larr; orange-wks</a></div>
   <div class="article-body">
     <div class="article-meta"><span class="article-tag">量子化</span><span class="article-tag">llm</span><span class="article-tag">llama.cpp</span><span class="article-tag">Ollama</span><span class="article-tag">ローカル LLM</span><span>2026-07-16</span></div>
-    <img class="article-cover" src="../../assets/ogp.jpg" alt="話題の 1-bit LLM「Bonsai 27B」、英語なら評判通り、日本語ではポンコツ…">
+    <img class="article-cover" src="../../assets/ogp.jpg" alt="話題の 1-bit LLM「Bonsai 27B」、18 問のベンチでは採用寸前だった — 日本語で測り直すまでは">
     <h2 id="3.5gb-%E3%81%A7-27b-%E3%81%8C%E5%8B%95%E3%81%8F" data-line="0" class="code-line">
 <a class="header-anchor-link" href="#3.5gb-%E3%81%A7-27b-%E3%81%8C%E5%8B%95%E3%81%8F" aria-hidden="true"></a> 3.5GB で 27B が動く</h2>
 <p data-line="2" class="code-line">PrismML が 7/14 に出した <a href="https://prismml.com/news/prismml-releases-bonsai-27b" target="_blank" rel="nofollow noopener noreferrer">Bonsai 27B</a> が話題になっています。Qwen3.6-27B の重みを 1-bit（{-1, +1}）まで削って 3.5GB にしたモデルで、公称は「FP16 比 89.5% のベンチ維持」。<br>
@@ -133,6 +133,38 @@
 <p data-line="56" class="code-line">英語だけで使うなら、3.5GB で 27B 相当が動くのは本物のようです。日本語の、とくに感情やニュアンスの読解が要る用途では、現時点の 1-bit はまだ渡れない橋でした。</p>
 <p data-line="58" class="code-line">今後のため覚えておきたいのは、小さいベンチの好成績で採用を決めない、公称値でなく、自分の言語・自分のタスクで測ること、です。</p>
 <p data-line="60" class="code-line">とはいえこれで確定という話でもないと思いますので、他の方の調査知見も知りたいところです。</p>
+<h2 id="%E8%BF%BD%E8%A8%98%EF%BC%88%E5%90%8C%E6%97%A5%EF%BC%89%3A-%E5%B7%BB%E3%81%8D%E6%B7%BB%E3%81%88%E3%81%A7%E7%8F%BE%E8%A1%8C%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AE%E5%BA%A7%E3%82%82%E8%90%BD%E3%81%A1%E3%81%9F" data-line="62" class="code-line">
+<a class="header-anchor-link" href="#%E8%BF%BD%E8%A8%98%EF%BC%88%E5%90%8C%E6%97%A5%EF%BC%89%3A-%E5%B7%BB%E3%81%8D%E6%B7%BB%E3%81%88%E3%81%A7%E7%8F%BE%E8%A1%8C%E3%83%A2%E3%83%87%E3%83%AB%E3%81%AE%E5%BA%A7%E3%82%82%E8%90%BD%E3%81%A1%E3%81%9F" aria-hidden="true"></a> 追記（同日）: 巻き添えで現行モデルの座も落ちた</h2>
+<p data-line="64" class="code-line">この評価をしていて気づいたことがもう 1 つあります。現行の qwen3.5:9b を採用したときの比較相手は、実効 4B 級のモデルだけでした。つまり「格下にしか勝っていない」状態で採用していたわけです。</p>
+<p data-line="66" class="code-line">そこで同じ 120 case で、同格上位の <a href="https://ollama.com/library/gemma4" target="_blank" rel="nofollow noopener noreferrer">gemma-4-12b-it QAT q4_0</a>（Google 公式の量子化前提学習版、7.2GB）と当ててみました。</p>
+<table data-line="68" class="code-line">
+<thead data-line="68" class="code-line">
+<tr data-line="68" class="code-line">
+<th></th>
+<th style="text-align:right">gemma-4-12b QAT</th>
+<th style="text-align:right">qwen3.5:9b</th>
+</tr>
+</thead>
+<tbody data-line="70" class="code-line">
+<tr data-line="70" class="code-line">
+<td>日本語 arousal 符号の正答率</td>
+<td style="text-align:right"><strong>1.000</strong></td>
+<td style="text-align:right">0.778</td>
+</tr>
+<tr data-line="71" class="code-line">
+<td>日本語 entity 抽出 F1</td>
+<td style="text-align:right"><strong>0.424</strong></td>
+<td style="text-align:right">0.240</td>
+</tr>
+<tr data-line="72" class="code-line">
+<td>主観フィルタ精度（全体）</td>
+<td style="text-align:right"><strong>0.925</strong></td>
+<td style="text-align:right">0.900</td>
+</tr>
+</tbody>
+</table>
+<p data-line="74" class="code-line">主要 18 指標中 17 で現行を上回り、日本語ではクラウドモデル（Claude Sonnet）にほぼ並びました。その日のうちにデフォルトを乗り換えました。</p>
+<p data-line="76" class="code-line">QAT（quantization-aware training、量子化を前提に学習しておく方式）の q4 は、後付けの量子化とは別物の日本語品質でした。Bonsai の検証のために作った評価セットが、そのまま現行モデルの座も落とした形です。教訓に 1 つ追加です。モデルを採用するときは、何に勝ったのかを記録しておくこと。</p>
 
     <div class="source-link">初出: <a href="https://zenn.dev/orangewk/articles/bonsai-27b-1bit-japanese-eval" target="_blank" rel="noopener">Zenn</a></div>
     <div class="bottom-nav"><a href="../../">&larr; orange-wks</a></div>
